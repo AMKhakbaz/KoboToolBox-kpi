@@ -89,6 +89,7 @@ INSTALLED_APPS = (
     # https://code.djangoproject.com/ticket/10827
     'django.contrib.contenttypes',
     'django.contrib.admin',
+    'django.contrib.postgres',
     'kobo.apps.kobo_auth.KoboAuthAppConfig',
     'django.contrib.auth',
     'django.contrib.sessions',
@@ -148,6 +149,7 @@ INSTALLED_APPS = (
     'kobo.apps.project_ownership.app.ProjectOwnershipAppConfig',
     'kobo.apps.long_running_migrations.app.LongRunningMigrationAppConfig',
     'kobo.apps.user_reports.apps.UserReportsConfig',
+    'kobo.apps.insightzen_core.apps.InsightZenCoreConfig',
     'drf_spectacular',
 )
 

@@ -1,0 +1,631 @@
+@use '../../../../scss/colors' as *;
+
+$dark-bg: #0b0b0b;
+$panel-bg: #111;
+$panel-border: rgba(255, 255, 255, 0.08);
+$text-primary: #f5f5f5;
+$text-secondary: rgba(255, 255, 255, 0.65);
+$accent: #3c89ff;
+
+.layoutRoot {
+  min-height: 100vh;
+  background: $dark-bg;
+  color: $text-primary;
+  display: flex;
+  font-family: 'Inter', 'IRANSans', 'Vazirmatn', sans-serif;
+}
+
+.menuColumn {
+  width: 280px;
+  transition: width 180ms ease;
+  position: relative;
+}
+
+.menuColumnCollapsed {
+  width: 92px;
+}
+
+.menuContainer {
+  position: sticky;
+  top: 16.6vh;
+  max-height: calc(100vh - 4rem);
+  margin: 2rem 1.5rem;
+  border-radius: 20px;
+  padding: 1.5rem 1rem;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid $panel-border;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.menuHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.menuTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #ffffff, rgba(91, 167, 255, 0.85));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.collapseButton {
+  background: transparent;
+  border: 1px solid $panel-border;
+  color: $text-secondary;
+  border-radius: 12px;
+  padding: 0.35rem 0.75rem;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-primary;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.menuSections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menuSection {
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: border 160ms ease;
+}
+
+.menuSectionActive {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  color: $text-secondary;
+  font-weight: 600;
+  transition: background 160ms ease, color 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.07);
+    color: $text-primary;
+  }
+}
+
+.sectionHeaderActive {
+  color: $text-primary;
+}
+
+.sectionIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.25rem;
+}
+
+.sectionLabel {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.sectionCaret {
+  transition: transform 180ms ease;
+}
+
+.sectionCaretOpen {
+  transform: rotate(90deg);
+}
+
+.menuLinks {
+  display: grid;
+  grid-template-columns: 1fr;
+  max-height: 360px;
+  overflow: hidden;
+  transition: max-height 180ms ease;
+}
+
+.menuLinksCollapsed {
+  max-height: 0;
+}
+
+.menuLink {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  text-decoration: none;
+  color: $text-secondary;
+  transition: background 120ms ease, color 120ms ease;
+  border-inline-start: 3px solid transparent;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: $text-primary;
+  }
+}
+
+.linkBullet {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.32);
+  flex-shrink: 0;
+}
+
+.menuLinkActive {
+  color: $text-primary;
+  border-inline-start-color: $accent;
+  background: rgba(60, 137, 255, 0.12);
+}
+
+.mainColumn {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerTexts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.headerTitle {
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+.headerSubtitle {
+  color: $text-secondary;
+  font-size: 1rem;
+}
+
+.languageToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid $panel-border;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  color: $text-secondary;
+  transition: background 160ms ease, color 160ms ease, border 160ms ease;
+
+  button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      color: $text-primary;
+    }
+  }
+}
+
+.languageActive {
+  color: $text-primary;
+}
+
+.contentCard {
+  background: $panel-bg;
+  border-radius: 24px;
+  border: 1px solid $panel-border;
+  padding: 2rem;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.tableWrapper {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  border: 1px solid $panel-border;
+  padding: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 960px;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(11, 11, 11, 0.96);
+  padding: 0.85rem;
+  text-align: start;
+  font-weight: 600;
+  color: $text-secondary;
+  backdrop-filter: blur(6px);
+}
+
+.table tbody tr {
+  transition: background 120ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.table tbody td {
+  padding: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: $text-primary;
+  vertical-align: middle;
+}
+
+.actionsColumn {
+  position: sticky;
+  right: 0;
+  background: rgba(11, 11, 11, 0.92);
+  backdrop-filter: blur(6px);
+}
+
+.badgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(60, 137, 255, 0.2);
+  color: #d7e4ff;
+  font-size: 0.75rem;
+}
+
+.actionButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid $panel-border;
+  border-radius: 10px;
+  padding: 0.45rem 0.85rem;
+  color: $text-primary;
+  cursor: pointer;
+  transition: background 120ms ease, border 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.32);
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem;
+  color: $text-secondary;
+}
+
+.tabList {
+  display: inline-flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 0.35rem;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  padding: 0.5rem 1.25rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-primary;
+  }
+}
+
+.tabButtonActive {
+  background: rgba(255, 255, 255, 0.16);
+  color: $text-primary;
+}
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 70;
+}
+
+.drawer {
+  width: min(520px, 90vw);
+  background: #111315;
+  border-inline-start: 1px solid $panel-border;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.formGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.formRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  color: $text-secondary;
+}
+
+.textInput,
+.selectInput,
+.multiSelect,
+.dateInput {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  color: $text-primary;
+  transition: border 120ms ease, background 120ms ease, box-shadow 120ms ease;
+
+  &:focus-visible {
+    outline: none;
+    border-color: rgba(60, 137, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(60, 137, 255, 0.2);
+  }
+}
+
+.lookupContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lookupSearchInput {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.6rem 0.85rem;
+  color: $text-primary;
+  transition: border 120ms ease, background 120ms ease, box-shadow 120ms ease;
+
+  &:focus-visible {
+    outline: none;
+    border-color: rgba(60, 137, 255, 0.6);
+    box-shadow: 0 0 0 3px rgba(60, 137, 255, 0.18);
+  }
+}
+
+.loadMoreButton {
+  align-self: flex-start;
+  border: 1px solid $panel-border;
+  background: rgba(255, 255, 255, 0.04);
+  color: $text-secondary;
+  padding: 0.4rem 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+
+  input {
+    appearance: none;
+    width: 42px;
+    height: 22px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    position: relative;
+    transition: background 160ms ease;
+
+    &:after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 160ms ease;
+    }
+
+    &:checked {
+      background: rgba(60, 137, 255, 0.9);
+    }
+
+    &:checked:after {
+      transform: translateX(20px);
+    }
+  }
+}
+
+.permissionTree {
+  border: 1px solid $panel-border;
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.permissionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.permissionGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.permissionOptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+}
+
+.permissionCheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: $text-secondary;
+
+  input {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.membershipList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.membershipCard {
+  border: 1px solid $panel-border;
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.membershipActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: $text-secondary;
+}
+
+.paginationControls {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.paginationButton {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid $panel-border;
+  border-radius: 10px;
+  padding: 0.35rem 0.85rem;
+  color: $text-primary;
+  cursor: pointer;
+  transition: background 120ms ease, border 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+}
+
+@media (max-width: 1280px) {
+  .mainColumn {
+    padding: 2rem;
+  }
+
+  .table {
+    min-width: 720px;
+  }
+}
+
+@media (max-width: 960px) {
+  .menuColumn {
+    display: none;
+  }
+
+  .mainColumn {
+    padding: 1.5rem;
+  }
+
+  .table {
+    min-width: 640px;
+  }
+}

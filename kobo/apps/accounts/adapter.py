@@ -6,6 +6,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME, login
 from django.db import transaction
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils import timezone
 from trench.utils import get_mfa_model, user_token_generator
 
@@ -14,6 +15,14 @@ from .mfa.models import MfaAvailableToUser
 from .mfa.permissions import mfa_allowed_for_user
 from .mfa.views import MfaTokenView
 from .utils import user_has_inactive_paid_subscription
+from .constants import (
+    ACCOUNT_STATUS_ACTIVE,
+    ACCOUNT_STATUS_PENDING_PAYMENT,
+    ACCOUNT_TYPE_ORGANIZATIONAL,
+    ACCOUNT_TYPE_PERSONAL,
+    BASE_MODULE_KEYS,
+    PERSONAL_STORAGE_LIMIT_BYTES,
+)
 
 
 class AccountAdapter(DefaultAccountAdapter):
@@ -83,6 +92,34 @@ class AccountAdapter(DefaultAccountAdapter):
                     timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 )
 
+            account_type = extra_data.get('account_type')
+            if account_type not in (
+                ACCOUNT_TYPE_ORGANIZATIONAL,
+                ACCOUNT_TYPE_PERSONAL,
+            ):
+                account_type = ACCOUNT_TYPE_ORGANIZATIONAL
+
+            extra_data['account_type'] = account_type
+
+            if account_type == ACCOUNT_TYPE_PERSONAL:
+                extra_data.update(
+                    {
+                        'payment_confirmed': True,
+                        'account_status': ACCOUNT_STATUS_ACTIVE,
+                        'allowed_modules': list(BASE_MODULE_KEYS),
+                        'storage_limit_bytes': PERSONAL_STORAGE_LIMIT_BYTES,
+                    }
+                )
+            else:
+                extra_data.update(
+                    {
+                        'payment_confirmed': False,
+                        'account_status': ACCOUNT_STATUS_PENDING_PAYMENT,
+                        'allowed_modules': list(BASE_MODULE_KEYS),
+                    }
+                )
+                extra_data.pop('storage_limit_bytes', None)
+
             user.extra_details.data.update(extra_data)
             if commit:
                 user.extra_details.save()
@@ -97,3 +134,19 @@ class AccountAdapter(DefaultAccountAdapter):
             )
             user.set_password(password)
             user.save()
+
+    def get_signup_redirect_url(self, request):
+        user = request.user
+        if user.is_authenticated:
+            try:
+                extra_details = user.extra_details
+            except user.extra_details.RelatedObjectDoesNotExist:
+                pass
+            else:
+                data = extra_details.data or {}
+                if (
+                    data.get('account_type') == ACCOUNT_TYPE_ORGANIZATIONAL
+                    and not data.get('payment_confirmed')
+                ):
+                    return reverse('account_payment')
+        return super().get_signup_redirect_url(request)

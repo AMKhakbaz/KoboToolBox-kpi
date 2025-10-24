@@ -1,0 +1,46 @@
+.wrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 920px;
+}
+
+.headerRow {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.headerCell {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #f5f5f5;
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.bodyRow {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cell {
+  padding: 0.65rem 1rem;
+  color: rgba(245, 245, 245, 0.82);
+  vertical-align: top;
+}
+
+.selectorCode {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  display: inline-block;
+  font-family: 'Fira Code', 'Source Code Pro', monospace;
+  font-size: 0.85rem;
+}
+
+.emptyText {
+  color: rgba(255, 255, 255, 0.6);
+}

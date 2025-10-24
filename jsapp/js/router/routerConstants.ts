@@ -13,6 +13,11 @@ export const ROUTES = Object.freeze({
   LIBRARY: '/library',
   MY_LIBRARY: '/library/my-library',
   PUBLIC_COLLECTIONS: '/library/public-collections',
+  FORM_MANAGER: '/form-manager',
+  MANAGEMENT: '/management',
+  COLLECTION: '/collection',
+  QUALITY_CONTROL: '/quality-control',
+  MRANALYSIS: '/mranalysis',
   NEW_LIBRARY_ITEM: '/library/asset/new',
   LIBRARY_ITEM: '/library/asset/:uid',
   EDIT_LIBRARY_ITEM: '/library/asset/:uid/edit',
@@ -45,6 +50,13 @@ export const ROUTES = Object.freeze({
   FORM_REST: '/forms/:uid/settings/rest',
   FORM_REST_HOOK: '/forms/:uid/settings/rest/:hookUid',
   FORM_RESET: '/forms/:uid/reset',
+})
+
+export const MODULE_ROUTES = Object.freeze({
+  MANAGEMENT: ROUTES.MANAGEMENT,
+  COLLECTION: ROUTES.COLLECTION,
+  QUALITY_CONTROL: ROUTES.QUALITY_CONTROL,
+  MRANALYSIS: ROUTES.MRANALYSIS,
 })
 
 export const PROJECTS_ROUTES: { readonly [key: string]: string } = {
