@@ -40,9 +40,10 @@ const ModulePanelPage = observer((props: ModulePanelPageProps) => {
     return <Navigate to={`${moduleDefinition.route}/${fallbackPanel.path}`} replace />
   }
 
+  const accountSnapshot = sessionStore.currentAccount
   const extraDetails =
-    'extra_details' in sessionStore.currentAccount
-      ? sessionStore.currentAccount.extra_details
+    accountSnapshot && typeof accountSnapshot === 'object' && 'extra_details' in accountSnapshot
+      ? accountSnapshot.extra_details
       : undefined
   const accessInfo = resolveAccountAccess(extraDetails)
   const hasModuleAccess = accessInfo.allowedModules.has(moduleDefinition.key)
