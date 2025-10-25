@@ -1,5 +1,9 @@
 from allauth.account.models import EmailAddress
 from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
@@ -15,6 +19,56 @@ from kpi.versioning import APIV2Versioning
 from .extend_schemas.api.v2.email.serializers import EmailRequestPayload
 from .mixins import MultipleFieldLookupMixin
 from .serializers import EmailAddressSerializer, SocialAccountSerializer
+from .constants import (
+    ACCOUNT_STATUS_ACTIVE,
+    ACCOUNT_STATUS_PENDING_PAYMENT,
+    ACCOUNT_TYPE_ORGANIZATIONAL,
+    ALL_MODULE_KEYS,
+)
+
+
+class AccountPaymentView(LoginRequiredMixin, TemplateView):
+    template_name = 'account/payment.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._requires_payment():
+            return redirect(self.get_success_url())
+        return super().dispatch(request, *args, **kwargs)
+
+    def _requires_payment(self) -> bool:
+        extra_details = getattr(self.request.user, 'extra_details', None)
+        data = getattr(extra_details, 'data', {}) or {}
+        status_value = data.get('account_status')
+        return (
+            data.get('account_type') == ACCOUNT_TYPE_ORGANIZATIONAL
+            and (
+                status_value == ACCOUNT_STATUS_PENDING_PAYMENT
+                or not data.get('payment_confirmed')
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        extra_details = getattr(self.request.user, 'extra_details', None)
+        data = getattr(extra_details, 'data', {}) or {}
+        context['account_status'] = data.get('account_status')
+        context['payment_confirmed'] = data.get('payment_confirmed')
+        return context
+
+    def post(self, request, *args, **kwargs):
+        extra_details = getattr(request.user, 'extra_details', None)
+        if extra_details:
+            data = extra_details.data or {}
+            data['payment_confirmed'] = True
+            data['account_status'] = ACCOUNT_STATUS_ACTIVE
+            data['allowed_modules'] = list(ALL_MODULE_KEYS)
+            data.pop('storage_limit_bytes', None)
+            extra_details.data = data
+            extra_details.save(update_fields=['data'])
+        return redirect(self.get_success_url())
+
+    def get_success_url(self) -> str:
+        return f"{reverse('kpi-root')}#/form-manager"
 
 
 @extend_schema(tags=['User / team / organization / usage'])
