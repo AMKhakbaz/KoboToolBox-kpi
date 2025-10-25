@@ -24,6 +24,19 @@ from ..static_lists import EXTRA_LANG_INFO, SECTOR_CHOICE_DEFAULTS
 
 env = environ.Env()
 
+
+def _get_env_list(*names, default=None):
+    """Return the first non-empty list parsed from the provided env var names."""
+
+    for name in names:
+        value = env.list(name, default=None)
+        if value:
+            return value
+        if value == []:
+            # Explicitly configured to an empty list
+            return value
+    return list(default) if isinstance(default, (list, tuple)) else default
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 settings_dirname = os.path.dirname(os.path.abspath(__file__))
 parent_dirname = os.path.dirname(settings_dirname)
@@ -62,7 +75,10 @@ if SESSION_COOKIE_DOMAIN:
     trusted_domains = [
         f'{public_request_scheme}://*{SESSION_COOKIE_DOMAIN}',
     ]
-    CSRF_TRUSTED_ORIGINS = trusted_domains
+    extra_trusted = _get_env_list('CSRF_TRUSTED_ORIGINS', 'DJANGO_CSRF_TRUSTED_ORIGINS', default=[])
+    CSRF_TRUSTED_ORIGINS = trusted_domains + [
+        origin for origin in (extra_trusted or []) if origin not in trusted_domains
+    ]
 ENKETO_CSRF_COOKIE_NAME = env.str('ENKETO_CSRF_COOKIE_NAME', '__csrf')
 
 # Limit sessions to 1 week (the default is 2 weeks)
@@ -74,7 +90,9 @@ LANGUAGE_COOKIE_AGE = SESSION_COOKIE_AGE
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DJANGO_DEBUG', False)
 
-ALLOWED_HOSTS = env.str('DJANGO_ALLOWED_HOSTS', '*').split(' ')
+ALLOWED_HOSTS = _get_env_list('DJANGO_ALLOWED_HOSTS', 'ALLOWED_HOSTS', default=['localhost'])
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost']
 
 LOGIN_REDIRECT_URL = 'kpi-root'
 LOGOUT_REDIRECT_URL = 'kobo_login'  # Use URL pattern instead of hard-coded value
