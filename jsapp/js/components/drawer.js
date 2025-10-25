@@ -180,13 +180,14 @@ const Drawer = observer(
       const accessInfo = resolveAccountAccess(extraDetails)
       const moduleLinks = MODULE_DEFINITIONS.map((moduleDefinition) => {
         const disabled = !accessInfo.allowedModules.has(moduleDefinition.key)
+        const moduleLabel = moduleDefinition.label
         const tooltip = disabled
           ? t('Available for organizational accounts only')
-          : moduleDefinition.label
+          : moduleLabel
         return (
           <DrawerLink
             key={moduleDefinition.key}
-            label={moduleDefinition.label}
+            label={moduleLabel}
             linkto={moduleDefinition.route}
             iconName={moduleDefinition.icon}
             disabled={disabled}

@@ -46,11 +46,13 @@ const ModulePanelPage = observer((props: ModulePanelPageProps) => {
       : undefined
   const accessInfo = resolveAccountAccess(extraDetails)
   const hasModuleAccess = accessInfo.allowedModules.has(moduleDefinition.key)
+  const moduleLabel = moduleDefinition.label
+  const panelLabel = panelDefinition.label
 
   if (!hasModuleAccess) {
     return (
       <div className={styles.moduleUnavailable}>
-        <h1 className={styles.moduleUnavailableTitle}>{moduleDefinition.label}</h1>
+        <h1 className={styles.moduleUnavailableTitle}>{moduleLabel}</h1>
         <p className={styles.moduleUnavailableDescription}>
           {t('This module is available only to organizational accounts with full access.')}
         </p>
@@ -104,25 +106,28 @@ const ModulePanelPage = observer((props: ModulePanelPageProps) => {
   return (
     <div className={styles.moduleRoot}>
       <aside className={styles.sidebar}>
-        <h2 className={styles.sidebarTitle}>{moduleDefinition.label}</h2>
+        <h2 className={styles.sidebarTitle}>{moduleLabel}</h2>
         <nav className={styles.sidebarNav}>
-          {moduleDefinition.panels.map((panel) => (
-            <NavLink
-              key={panel.key}
-              to={`${moduleDefinition.route}/${panel.path}`}
-              className={({ isActive }) =>
-                cx(styles.navLink, {
-                  [styles.navLinkActive]: isActive,
-                })
-              }
-            >
-              {panel.label}
-            </NavLink>
-          ))}
+          {moduleDefinition.panels.map((panel) => {
+            const panelNavLabel = panel.label
+            return (
+              <NavLink
+                key={panel.key}
+                to={`${moduleDefinition.route}/${panel.path}`}
+                className={({ isActive }) =>
+                  cx(styles.navLink, {
+                    [styles.navLinkActive]: isActive,
+                  })
+                }
+              >
+                {panelNavLabel}
+              </NavLink>
+            )
+          })}
         </nav>
       </aside>
       <main className={styles.content}>
-        <h1 className={styles.panelTitle}>{panelDefinition.label}</h1>
+        <h1 className={styles.panelTitle}>{panelLabel}</h1>
         <div className={styles.placeholder}>
           <p>
             {t('Content for this panel will appear here for organizational accounts.')}

@@ -5,69 +5,175 @@ export type ModuleKey = 'management' | 'collection' | 'quality-control' | 'mrana
 
 export interface ModulePanelDefinition {
   key: string
-  label: string
   path: string
+  label: string
+  labelKey: string
 }
 
 export interface ModuleDefinition {
   key: ModuleKey
-  label: string
   icon: IconName
   route: string
+  label: string
+  labelKey: string
   panels: ModulePanelDefinition[]
 }
 
 export const MODULE_DEFINITIONS: ModuleDefinition[] = [
   {
     key: 'management',
-    label: t('Management'),
     icon: 'settings',
     route: ROUTES.MANAGEMENT,
+    label: t('Management'),
+    labelKey: 'layout.modules.management',
     panels: [
-      { key: 'project-management', label: t('Project Management'), path: 'project-management' },
-      { key: 'user-management', label: t('User Management'), path: 'user-management' },
-      { key: 'database-management', label: t('Database Management'), path: 'database-management' },
+      {
+        key: 'project-management',
+        path: 'project-management',
+        label: t('Project Management'),
+        labelKey: 'panels.management.project-management',
+      },
+      {
+        key: 'user-management',
+        path: 'user-management',
+        label: t('User Management'),
+        labelKey: 'panels.management.user-management',
+      },
+      {
+        key: 'database-management',
+        path: 'database-management',
+        label: t('Database Management'),
+        labelKey: 'panels.management.database-management',
+      },
     ],
   },
   {
     key: 'collection',
-    label: t('Collection'),
     icon: 'group',
     route: ROUTES.COLLECTION,
+    label: t('Collection'),
+    labelKey: 'layout.modules.collection',
     panels: [
-      { key: 'collection-management', label: t('Collection Management'), path: 'collection-management' },
-      { key: 'collection-performance', label: t('Collection Performance'), path: 'collection-performance' },
-      { key: 'quota-management', label: t('Quota Management'), path: 'quota-management' },
-      { key: 'telephone-interviewer', label: t('Telephone Interviewer'), path: 'telephone-interviewer' },
-      { key: 'fieldwork-interviewer', label: t('Fieldwork Interviewer'), path: 'fieldwork-interviewer' },
-      { key: 'focus-group-panel', label: t('Focus Group Panel'), path: 'focus-group-panel' },
+      {
+        key: 'collection-management',
+        path: 'collection-management',
+        label: t('Collection Management'),
+        labelKey: 'panels.collection.collection-management',
+      },
+      {
+        key: 'collection-performance',
+        path: 'collection-performance',
+        label: t('Collection Performance'),
+        labelKey: 'panels.collection.collection-performance',
+      },
+      {
+        key: 'quota-management',
+        path: 'quota-management',
+        label: t('Quota Management'),
+        labelKey: 'panels.collection.quota-management',
+      },
+      {
+        key: 'telephone-interviewer',
+        path: 'telephone-interviewer',
+        label: t('Telephone Interviewer'),
+        labelKey: 'panels.collection.telephone-interviewer',
+      },
+      {
+        key: 'fieldwork-interviewer',
+        path: 'fieldwork-interviewer',
+        label: t('Fieldwork Interviewer'),
+        labelKey: 'panels.collection.fieldwork-interviewer',
+      },
+      {
+        key: 'focus-group-panel',
+        path: 'focus-group-panel',
+        label: t('Focus Group Panel'),
+        labelKey: 'panels.collection.focus-group-panel',
+      },
     ],
   },
   {
     key: 'quality-control',
-    label: t('Quality Control'),
     icon: 'check',
     route: ROUTES.QUALITY_CONTROL,
+    label: t('Quality Control'),
+    labelKey: 'layout.modules.quality-control',
     panels: [
-      { key: 'qc-management', label: t('QC Management'), path: 'qc-management' },
-      { key: 'qc-performance', label: t('QC Performance'), path: 'qc-performance' },
-      { key: 'voice-review', label: t('Voice Review'), path: 'voice-review' },
-      { key: 'callback-qc', label: t('Callback QC'), path: 'callback-qc' },
-      { key: 'coding', label: t('Coding'), path: 'coding' },
-      { key: 'statistical-health-check', label: t('Statistical Health Check'), path: 'statistical-health-check' },
+      {
+        key: 'qc-management',
+        path: 'qc-management',
+        label: t('QC Management'),
+        labelKey: 'panels.quality-control.qc-management',
+      },
+      {
+        key: 'qc-performance',
+        path: 'qc-performance',
+        label: t('QC Performance'),
+        labelKey: 'panels.quality-control.qc-performance',
+      },
+      {
+        key: 'voice-review',
+        path: 'voice-review',
+        label: t('Voice Review'),
+        labelKey: 'panels.quality-control.voice-review',
+      },
+      {
+        key: 'callback-qc',
+        path: 'callback-qc',
+        label: t('Callback QC'),
+        labelKey: 'panels.quality-control.callback-qc',
+      },
+      {
+        key: 'coding',
+        path: 'coding',
+        label: t('Coding'),
+        labelKey: 'panels.quality-control.coding',
+      },
+      {
+        key: 'statistical-health-check',
+        path: 'statistical-health-check',
+        label: t('Statistical Health Check'),
+        labelKey: 'panels.quality-control.statistical-health-check',
+      },
     ],
   },
   {
     key: 'mranalysis',
-    label: t('MRAnalysis'),
     icon: 'reports',
     route: ROUTES.MRANALYSIS,
+    label: t('MRAnalysis'),
+    labelKey: 'layout.modules.mranalysis',
     panels: [
-      { key: 'tabulation', label: t('Tabulation'), path: 'tabulation' },
-      { key: 'statistics', label: t('Statistics'), path: 'statistics' },
-      { key: 'funnel-analysis', label: t('Funnel Analysis'), path: 'funnel-analysis' },
-      { key: 'conjoint-analysis', label: t('Conjoint Analysis'), path: 'conjoint-analysis' },
-      { key: 'segmentation-analysis', label: t('Segmentation Analysis'), path: 'segmentation-analysis' },
+      {
+        key: 'tabulation',
+        path: 'tabulation',
+        label: t('Tabulation'),
+        labelKey: 'panels.mranalysis.tabulation',
+      },
+      {
+        key: 'statistics',
+        path: 'statistics',
+        label: t('Statistics'),
+        labelKey: 'panels.mranalysis.statistics',
+      },
+      {
+        key: 'funnel-analysis',
+        path: 'funnel-analysis',
+        label: t('Funnel Analysis'),
+        labelKey: 'panels.mranalysis.funnel-analysis',
+      },
+      {
+        key: 'conjoint-analysis',
+        path: 'conjoint-analysis',
+        label: t('Conjoint Analysis'),
+        labelKey: 'panels.mranalysis.conjoint-analysis',
+      },
+      {
+        key: 'segmentation-analysis',
+        path: 'segmentation-analysis',
+        label: t('Segmentation Analysis'),
+        labelKey: 'panels.mranalysis.segmentation-analysis',
+      },
     ],
   },
 ]

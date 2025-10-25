@@ -31,6 +31,17 @@ export function InsightZenLayout({ activeModuleKey, activePanelKey, children }: 
   }, [activeModuleKey])
 
   const moduleDefinitions = useMemo(() => MODULE_DEFINITIONS, [])
+  const activeModuleDefinition = useMemo(
+    () => moduleDefinitions.find((definition) => definition.key === activeModuleKey),
+    [moduleDefinitions, activeModuleKey],
+  )
+  const activePanelDefinition = useMemo(
+    () => activeModuleDefinition?.panels.find((panel) => panel.key === activePanelKey),
+    [activeModuleDefinition, activePanelKey],
+  )
+  const activePanelLabel = activePanelDefinition
+    ? t(activePanelDefinition.labelKey)
+    : t(`panels.${activeModuleKey}.${activePanelKey}`)
 
   return (
     <div className={styles.layoutRoot} dir={direction} lang={locale}>
@@ -50,7 +61,7 @@ export function InsightZenLayout({ activeModuleKey, activePanelKey, children }: 
             {moduleDefinitions.map((moduleDefinition) => {
               const isActiveModule = moduleDefinition.key === activeModuleKey
               const isOpen = openModuleKey === moduleDefinition.key
-              const moduleLabel = t(`layout.modules.${moduleDefinition.key}`)
+              const moduleLabel = t(moduleDefinition.labelKey)
               return (
                 <div
                   key={moduleDefinition.key}
@@ -88,7 +99,7 @@ export function InsightZenLayout({ activeModuleKey, activePanelKey, children }: 
                     })}
                   >
                     {moduleDefinition.panels.map((panel) => {
-                      const panelLabel = t(`panels.${moduleDefinition.key}.${panel.key}`)
+                      const panelLabel = t(panel.labelKey)
                       return (
                         <NavLink
                           key={panel.key}
@@ -114,7 +125,7 @@ export function InsightZenLayout({ activeModuleKey, activePanelKey, children }: 
       <main className={styles.mainColumn}>
         <header className={styles.header}>
           <div className={styles.headerTexts}>
-            <h1 className={styles.headerTitle}>{t(`panels.${activeModuleKey}.${activePanelKey}`)}</h1>
+            <h1 className={styles.headerTitle}>{activePanelLabel}</h1>
             <p className={styles.headerSubtitle}>{t('app.subtitle')}</p>
           </div>
           <div className={styles.languageToggle} role='group' aria-label={t('layout.language')}>

@@ -48,10 +48,10 @@ export function PermissionTree({ value, onChange }: PermissionTreeProps) {
         <PermissionTreeGroup
           key={module.key}
           moduleKey={module.key}
-          moduleLabel={t(`layout.modules.${module.key}`)}
+          moduleLabel={t(module.labelKey)}
           panels={module.panels.map((panel) => ({
             key: panel.key,
-            label: t(`panels.${module.key}.${panel.key}`),
+            label: t(panel.labelKey),
           }))}
           moduleValue={value[module.key] ?? {}}
           onModuleToggle={toggleModule}
