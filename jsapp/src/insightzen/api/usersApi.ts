@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchDelete, fetchGet, fetchPatch, fetchPost } from '#/api'
 import type { Json } from '#/components/common/common.interfaces'

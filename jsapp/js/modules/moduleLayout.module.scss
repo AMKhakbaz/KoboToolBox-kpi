@@ -9,7 +9,7 @@
 
 .sidebar {
   width: 260px;
-  background-color: $kobo-gray-050;
+  background-color: $kobo-gray-100;
   border-radius: 12px;
   padding: 1.5rem 1rem;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
@@ -43,7 +43,7 @@
 }
 
 .navLinkActive {
-  background-color: $kobo-teal-050;
+  background-color: $kobo-bg-teal;
   color: $kobo-teal;
 }
 
@@ -73,7 +73,7 @@
   padding: 4rem 2rem;
   margin: 3rem;
   text-align: center;
-  background-color: $kobo-gray-050;
+  background-color: $kobo-gray-100;
   border-radius: 12px;
   border: 1px solid $kobo-gray-100;
 }

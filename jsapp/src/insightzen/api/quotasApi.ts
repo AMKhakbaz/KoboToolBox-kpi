@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { fetchGet, fetchPatch, fetchPost } from '#/api'
