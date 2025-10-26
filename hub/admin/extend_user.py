@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from constance import config
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
@@ -14,6 +15,17 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
 
+from hub.models import ExtraUserDetail
+from kobo.apps.accounts.constants import (
+    ACCOUNT_STATUS_ACTIVE,
+    ACCOUNT_STATUS_PENDING_PAYMENT,
+    ACCOUNT_TYPE_CHOICES,
+    ACCOUNT_TYPE_ORGANIZATIONAL,
+    ACCOUNT_TYPE_PERSONAL,
+    BASE_MODULE_KEYS,
+    ORGANIZATIONAL_MODULE_KEYS,
+    PERSONAL_STORAGE_LIMIT_BYTES,
+)
 from kobo.apps.accounts.mfa.models import MfaMethod
 from kobo.apps.accounts.validators import (
     USERNAME_INVALID_MESSAGE,
@@ -43,6 +55,62 @@ def validate_superuser_auth(obj) -> bool:
     return True
 
 
+MODULE_ORDER = list(BASE_MODULE_KEYS) + list(ORGANIZATIONAL_MODULE_KEYS)
+
+
+def _initial_account_settings(user):
+    if not user or not getattr(user, 'pk', None):
+        return {}
+    extra_details, _ = ExtraUserDetail.objects.get_or_create(user=user)
+    return dict(extra_details.data or {})
+
+
+def _ordered_allowed_modules(values: set[str]) -> list[str]:
+    ordered = []
+    for key in MODULE_ORDER:
+        if key in values and key not in ordered:
+            ordered.append(key)
+    return ordered
+
+
+def _persist_account_settings(
+    user,
+    account_type: str,
+    payment_confirmed: bool,
+    storage_limit: int | None,
+    *,
+    commit: bool,
+):
+    extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
+    data = dict(extra_details_obj.data or {})
+    data['account_type'] = account_type
+
+    if account_type == ACCOUNT_TYPE_PERSONAL:
+        data['payment_confirmed'] = True
+        data['account_status'] = ACCOUNT_STATUS_ACTIVE
+        data['allowed_modules'] = list(BASE_MODULE_KEYS)
+        limit_value = storage_limit if storage_limit is not None else PERSONAL_STORAGE_LIMIT_BYTES
+        data['storage_limit_bytes'] = limit_value
+    else:
+        is_confirmed = bool(payment_confirmed)
+        data['payment_confirmed'] = is_confirmed
+        data['account_status'] = (
+            ACCOUNT_STATUS_ACTIVE if is_confirmed else ACCOUNT_STATUS_PENDING_PAYMENT
+        )
+        allowed_set = set(BASE_MODULE_KEYS)
+        if is_confirmed:
+            allowed_set.update(ORGANIZATIONAL_MODULE_KEYS)
+        data['allowed_modules'] = _ordered_allowed_modules(allowed_set)
+        if storage_limit is not None:
+            data['storage_limit_bytes'] = storage_limit
+        else:
+            data.pop('storage_limit_bytes', None)
+
+    extra_details_obj.data = data
+    if commit:
+        extra_details_obj.save(update_fields=['data'])
+
+
 class UserChangeForm(DjangoUserChangeForm):
 
     username = CharField(
@@ -51,6 +119,36 @@ class UserChangeForm(DjangoUserChangeForm):
         help_text=USERNAME_INVALID_MESSAGE,
         validators=username_validators,
     )
+    account_type = forms.ChoiceField(
+        choices=ACCOUNT_TYPE_CHOICES,
+        label='Account type',
+        required=True,
+    )
+    payment_confirmed = forms.BooleanField(
+        label='Payment confirmed',
+        required=False,
+        help_text='Mark as paid to unlock all InsightZen modules for organizational accounts.',
+    )
+    storage_limit_bytes = forms.IntegerField(
+        label='Storage limit (bytes)',
+        required=False,
+        min_value=0,
+        help_text='Leave blank to use the default limit for this account type.',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        account_data = _initial_account_settings(self.instance)
+        account_type = account_data.get('account_type', ACCOUNT_TYPE_ORGANIZATIONAL)
+        payment_confirmed = bool(account_data.get('payment_confirmed', False))
+        storage_limit = account_data.get('storage_limit_bytes')
+
+        self.fields['account_type'].initial = account_type
+        self.fields['payment_confirmed'].initial = (
+            True if account_type == ACCOUNT_TYPE_PERSONAL else payment_confirmed
+        )
+        if storage_limit is not None:
+            self.fields['storage_limit_bytes'].initial = storage_limit
 
     def clean(self):
         cleaned_data = super().clean()
@@ -70,6 +168,20 @@ class UserChangeForm(DjangoUserChangeForm):
 
         return cleaned_data
 
+    def save(self, commit=True):
+        user = super().save(commit)
+        account_type = self.cleaned_data.get('account_type', ACCOUNT_TYPE_ORGANIZATIONAL)
+        payment_confirmed = self.cleaned_data.get('payment_confirmed', False)
+        storage_limit = self.cleaned_data.get('storage_limit_bytes')
+        _persist_account_settings(
+            user,
+            account_type,
+            payment_confirmed,
+            storage_limit,
+            commit=commit,
+        )
+        return user
+
 
 class UserCreationForm(DjangoUserCreationForm):
 
@@ -79,6 +191,38 @@ class UserCreationForm(DjangoUserCreationForm):
         help_text=USERNAME_INVALID_MESSAGE,
         validators=username_validators,
     )
+    account_type = forms.ChoiceField(
+        choices=ACCOUNT_TYPE_CHOICES,
+        label='Account type',
+        required=True,
+        initial=ACCOUNT_TYPE_ORGANIZATIONAL,
+    )
+    payment_confirmed = forms.BooleanField(
+        label='Payment confirmed',
+        required=False,
+        initial=False,
+        help_text='Organizational accounts require confirmation before gaining full access.',
+    )
+    storage_limit_bytes = forms.IntegerField(
+        label='Storage limit (bytes)',
+        required=False,
+        min_value=0,
+        help_text='Defaults to 500MB for personal accounts when left blank.',
+    )
+
+    def save(self, commit=True):
+        user = super().save(commit)
+        account_type = self.cleaned_data.get('account_type', ACCOUNT_TYPE_ORGANIZATIONAL)
+        payment_confirmed = self.cleaned_data.get('payment_confirmed', False)
+        storage_limit = self.cleaned_data.get('storage_limit_bytes')
+        _persist_account_settings(
+            user,
+            account_type,
+            payment_confirmed,
+            storage_limit,
+            commit=commit,
+        )
+        return user
 
 
 class OrgInline(admin.StackedInline):
@@ -191,10 +335,31 @@ class ExtendedUserAdmin(AdvancedSearchMixin, UserAdmin):
         'deployed_forms_count',
         'monthly_submission_count',
     )
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        *UserAdmin.fieldsets,
+        (
+            'InsightZen account settings',
+            {'fields': ('account_type', 'payment_confirmed', 'storage_limit_bytes')},
+        ),
         (
             'Deployed forms and Submissions Counts',
             {'fields': ('deployed_forms_count', 'monthly_submission_count')},
+        ),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                'classes': ('wide',),
+                'fields': (
+                    'username',
+                    'password1',
+                    'password2',
+                    'account_type',
+                    'payment_confirmed',
+                    'storage_limit_bytes',
+                ),
+            },
         ),
     )
     actions = ['remove', 'delete', 'mark_inactive']

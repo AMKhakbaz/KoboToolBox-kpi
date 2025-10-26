@@ -8,6 +8,7 @@ from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
+from hub.models import ExtraUserDetail
 from trench.utils import get_mfa_model, user_token_generator
 
 from .mfa.forms import MfaTokenForm
@@ -79,6 +80,8 @@ class AccountAdapter(DefaultAccountAdapter):
         extra_fields = set(form.fields.keys()).difference(standard_fields)
         with transaction.atomic():
             user = super().save_user(request, user, form, commit)
+            extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
+            extra_details_data = dict(extra_details_obj.data or {})
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
 
             # If the form contains a Terms of Service checkbox (checked)
@@ -110,6 +113,7 @@ class AccountAdapter(DefaultAccountAdapter):
                         'storage_limit_bytes': PERSONAL_STORAGE_LIMIT_BYTES,
                     }
                 )
+                extra_details_data['storage_limit_bytes'] = PERSONAL_STORAGE_LIMIT_BYTES
             else:
                 extra_data.update(
                     {
@@ -119,17 +123,20 @@ class AccountAdapter(DefaultAccountAdapter):
                     }
                 )
                 extra_data.pop('storage_limit_bytes', None)
+                extra_details_data.pop('storage_limit_bytes', None)
 
-            user.extra_details.data.update(extra_data)
+            extra_details_data.update(extra_data)
+            extra_details_obj.data = extra_details_data
             if commit:
-                user.extra_details.save()
+                extra_details_obj.save(update_fields=['data'])
         return user
 
     def set_password(self, user, password):
         with transaction.atomic():
-            user.extra_details.password_date_changed = timezone.now()
-            user.extra_details.validated_password = True
-            user.extra_details.save(
+            extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
+            extra_details_obj.password_date_changed = timezone.now()
+            extra_details_obj.validated_password = True
+            extra_details_obj.save(
                 update_fields=['password_date_changed', 'validated_password']
             )
             user.set_password(password)

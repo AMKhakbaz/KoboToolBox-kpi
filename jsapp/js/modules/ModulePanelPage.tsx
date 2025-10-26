@@ -1,8 +1,7 @@
 import React from 'react'
 
-import cx from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { Navigate, NavLink } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 
 import sessionStore from '#/stores/session'
 import { resolveAccountAccess } from './accountAccess'
@@ -48,7 +47,6 @@ const ModulePanelPage = observer((props: ModulePanelPageProps) => {
   const accessInfo = resolveAccountAccess(extraDetails)
   const hasModuleAccess = accessInfo.allowedModules.has(moduleDefinition.key)
   const moduleLabel = moduleDefinition.label
-  const panelLabel = panelDefinition.label
 
   if (!hasModuleAccess) {
     return (
@@ -61,81 +59,33 @@ const ModulePanelPage = observer((props: ModulePanelPageProps) => {
     )
   }
 
+  let panelContent: React.ReactNode = null
+
   if (
     moduleDefinition.key === 'management' &&
     (panelDefinition.key === 'user-management' || panelDefinition.key === 'project-management')
   ) {
-    return (
-      <InsightZenI18nProvider>
-        <InsightZenLayout activeModuleKey={moduleDefinition.key} activePanelKey={panelDefinition.key}>
-          {panelDefinition.key === 'user-management' ? <ListUsersPage /> : <ListProjectsPage />}
-        </InsightZenLayout>
-      </InsightZenI18nProvider>
-    )
-  }
-
-  if (moduleDefinition.key === 'collection' && panelDefinition.key === 'telephone-interviewer') {
-    return (
-      <InsightZenI18nProvider>
-        <InsightZenLayout activeModuleKey={moduleDefinition.key} activePanelKey={panelDefinition.key}>
-          <TelephoneInterviewerPage />
-        </InsightZenLayout>
-      </InsightZenI18nProvider>
-    )
-  }
-
-  if (moduleDefinition.key === 'collection' && panelDefinition.key === 'collection-performance') {
-    return (
-      <InsightZenI18nProvider>
-        <InsightZenLayout activeModuleKey={moduleDefinition.key} activePanelKey={panelDefinition.key}>
-          <CollectionPerformancePage />
-        </InsightZenLayout>
-      </InsightZenI18nProvider>
-    )
-  }
-
-  if (moduleDefinition.key === 'collection' && panelDefinition.key === 'quota-management') {
-    return (
-      <InsightZenI18nProvider>
-        <InsightZenLayout activeModuleKey={moduleDefinition.key} activePanelKey={panelDefinition.key}>
-          <QuotaManagementPage />
-        </InsightZenLayout>
-      </InsightZenI18nProvider>
+    panelContent = panelDefinition.key === 'user-management' ? <ListUsersPage /> : <ListProjectsPage />
+  } else if (moduleDefinition.key === 'collection' && panelDefinition.key === 'telephone-interviewer') {
+    panelContent = <TelephoneInterviewerPage />
+  } else if (moduleDefinition.key === 'collection' && panelDefinition.key === 'collection-performance') {
+    panelContent = <CollectionPerformancePage />
+  } else if (moduleDefinition.key === 'collection' && panelDefinition.key === 'quota-management') {
+    panelContent = <QuotaManagementPage />
+  } else {
+    panelContent = (
+      <div className={styles.placeholder}>
+        <p>{t('Content for this panel will appear here for organizational accounts.')}</p>
+      </div>
     )
   }
 
   return (
-    <div className={styles.moduleRoot}>
-      <aside className={styles.sidebar}>
-        <h2 className={styles.sidebarTitle}>{moduleLabel}</h2>
-        <nav className={styles.sidebarNav}>
-          {moduleDefinition.panels.map((panel) => {
-            const panelNavLabel = panel.label
-            return (
-              <NavLink
-                key={panel.key}
-                to={`${moduleDefinition.route}/${panel.path}`}
-                className={({ isActive }) =>
-                  cx(styles.navLink, {
-                    [styles.navLinkActive]: isActive,
-                  })
-                }
-              >
-                {panelNavLabel}
-              </NavLink>
-            )
-          })}
-        </nav>
-      </aside>
-      <main className={styles.content}>
-        <h1 className={styles.panelTitle}>{panelLabel}</h1>
-        <div className={styles.placeholder}>
-          <p>
-            {t('Content for this panel will appear here for organizational accounts.')}
-          </p>
-        </div>
-      </main>
-    </div>
+    <InsightZenI18nProvider>
+      <InsightZenLayout activeModuleKey={moduleDefinition.key} activePanelKey={panelDefinition.key}>
+        {panelContent}
+      </InsightZenLayout>
+    </InsightZenI18nProvider>
   )
 })
 
