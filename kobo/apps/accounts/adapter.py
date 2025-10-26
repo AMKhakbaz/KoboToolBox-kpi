@@ -82,17 +82,19 @@ class AccountAdapter(DefaultAccountAdapter):
             user = super().save_user(request, user, form, commit)
             extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
             extra_details_data = dict(extra_details_obj.data or {})
+            private_data = dict(extra_details_obj.private_data or {})
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
 
             # If the form contains a Terms of Service checkbox (checked)
-            if extra_data.pop('terms_of_service', None):
+            tos_accepted = extra_data.pop('terms_of_service', None)
+            if tos_accepted:
                 # We 'pop' because we don't want to save 'terms_of_service':true
                 # in extra_details.data. Instead, save a now() date string as
                 # the last ToS acceptance time in private_data.
                 # See also: TOSView.post() in apps/accounts/tos.py, which
                 # lets the frontend accept ToS on behalf of existing users.
-                user.extra_details.private_data['last_tos_accept_time'] = (
-                    timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                private_data['last_tos_accept_time'] = timezone.now().strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
                 )
 
             account_type = extra_data.get('account_type')
@@ -127,8 +129,12 @@ class AccountAdapter(DefaultAccountAdapter):
 
             extra_details_data.update(extra_data)
             extra_details_obj.data = extra_details_data
+            extra_details_obj.private_data = private_data
             if commit:
-                extra_details_obj.save(update_fields=['data'])
+                update_fields = ['data']
+                if tos_accepted:
+                    update_fields.append('private_data')
+                extra_details_obj.save(update_fields=update_fields)
         return user
 
     def set_password(self, user, password):
@@ -147,7 +153,7 @@ class AccountAdapter(DefaultAccountAdapter):
         if user.is_authenticated:
             try:
                 extra_details = user.extra_details
-            except user.extra_details.RelatedObjectDoesNotExist:
+            except ExtraUserDetail.DoesNotExist:
                 pass
             else:
                 data = extra_details.data or {}
