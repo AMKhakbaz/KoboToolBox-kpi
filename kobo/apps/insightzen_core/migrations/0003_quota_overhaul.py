@@ -66,7 +66,7 @@ class Migration(migrations.Migration):
             'dimensions',
             models.JSONField(blank=True, default=list),
             table='insightzen_core_quotascheme',
-            column_sql='"dimensions" jsonb NOT NULL DEFAULT ''[]''::jsonb',
+            column_sql="\"dimensions\" jsonb NOT NULL DEFAULT '[]'::jsonb",
         ),
         _safe_add_field(
             'quotascheme',
@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
             'overflow_policy',
             models.CharField(choices=[('strict', 'Strict'), ('soft', 'Soft'), ('weighted', 'Weighted')], default='strict', max_length=16),
             table='insightzen_core_quotascheme',
-            column_sql='"overflow_policy" varchar(16) NOT NULL DEFAULT ''strict''',
+            column_sql="\"overflow_policy\" varchar(16) NOT NULL DEFAULT 'strict'",
         ),
         _safe_add_field(
             'quotascheme',
@@ -101,7 +101,7 @@ class Migration(migrations.Migration):
             'status',
             models.CharField(choices=[('draft', 'Draft'), ('published', 'Published'), ('archived', 'Archived')], default='draft', max_length=16),
             table='insightzen_core_quotascheme',
-            column_sql='"status" varchar(16) NOT NULL DEFAULT ''draft''',
+            column_sql="\"status\" varchar(16) NOT NULL DEFAULT 'draft'",
         ),
         _safe_add_field(
             'quotascheme',
@@ -136,7 +136,7 @@ class Migration(migrations.Migration):
             'selector',
             models.JSONField(default=dict),
             table='insightzen_core_quotacell',
-            column_sql='"selector" jsonb NOT NULL DEFAULT ''{}''::jsonb',
+            column_sql="\"selector\" jsonb NOT NULL DEFAULT '{}'::jsonb",
         ),
         _safe_add_field(
             'quotacell',
