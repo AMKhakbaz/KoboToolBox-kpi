@@ -39,12 +39,24 @@ def _safe_add_field(model_name, name, field, *, table, column_sql, column_name=N
 
 
 def _safe_remove_constraint(model_name, name, *, table):
+    sql = f"""
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1
+                FROM pg_constraint
+                WHERE conname = '{name}'
+                  AND conrelid = '"{table}"'::regclass
+            ) THEN
+                ALTER TABLE "{table}" DROP CONSTRAINT "{name}";
+            END IF;
+        END;
+        $$;
+    """
+
     return migrations.SeparateDatabaseAndState(
         database_operations=[
-            migrations.RunSQL(
-                f'ALTER TABLE "{table}" DROP CONSTRAINT IF EXISTS "{name}";',
-                migrations.RunSQL.noop,
-            ),
+            migrations.RunSQL(sql, migrations.RunSQL.noop),
         ],
         state_operations=[
             migrations.RemoveConstraint(model_name=model_name, name=name),
