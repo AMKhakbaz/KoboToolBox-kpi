@@ -18,6 +18,7 @@ from django.utils.translation import gettext_lazy as t
 from hub.models.sitewide_message import SitewideMessage
 from hub.utils.i18n import I18nUtils
 from kobo.static_lists import COUNTRIES, USER_METADATA_DEFAULT_LABELS
+from .constants import ACCOUNT_TYPE_CHOICES
 
 # Only these fields can be controlled by constance.config.USER_METADATA_FIELDS
 CONFIGURABLE_METADATA_FIELDS = (
@@ -41,6 +42,12 @@ class LoginForm(BaseLoginForm):
 
 
 class KoboSignupMixin(forms.Form):
+    account_type = forms.ChoiceField(
+        label=t('Which account type would you like to create?'),
+        required=True,
+        widget=forms.RadioSelect,
+        choices=ACCOUNT_TYPE_CHOICES,
+    )
     # NOTE: Fields that are not part of django's contrib.auth.User model
     #       are saved to ExtraUserDetail, via django-allauth internals
     # SEE:
@@ -248,6 +255,7 @@ class SocialSignupForm(KoboSignupMixin, BaseSocialSignupForm):
         'username',
         'email',
         'name',
+        'account_type',
         'country',
         'sector',
         'organization_type',
@@ -275,6 +283,7 @@ class SignupForm(KoboSignupMixin, BaseSignupForm):
         'name',
         'username',
         'email',
+        'account_type',
         'country',
         'sector',
         'organization_type',

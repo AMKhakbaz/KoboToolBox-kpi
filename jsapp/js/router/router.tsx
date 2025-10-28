@@ -10,6 +10,7 @@ import PublicCollectionsRoute from '#/components/library/publicCollectionsRoute'
 import { PERMISSIONS_CODENAMES } from '#/components/permissions/permConstants'
 import processingRoutes from '#/components/processing/routes'
 import projectsRoutes from '#/projects/routes'
+import moduleRoutes from '#/modules/routes'
 import PermProtectedRoute from '#/router/permProtectedRoute'
 import { injectRouter } from './legacy'
 import RequireAuth from './requireAuth'
@@ -27,9 +28,11 @@ const FormNotFound = React.lazy(() => import(/* webpackPrefetch: true */ '#/comp
 export const router = createHashRouter(
   createRoutesFromElements(
     <Route path={ROUTES.ROOT} element={<App />}>
-      <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.FORMS} replace />} />
+      <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.FORM_MANAGER} replace />} />
       <Route path={ROUTES.ACCOUNT_ROOT}>{accountRoutes()}</Route>
       {projectsRoutes()}
+      {moduleRoutes()}
+      <Route path={ROUTES.FORM_MANAGER} element={<Navigate to={PROJECTS_ROUTES.MY_PROJECTS} replace />} />
       <Route path={ROUTES.LIBRARY}>
         <Route path='' element={<Navigate to={ROUTES.MY_LIBRARY} replace />} />
         <Route

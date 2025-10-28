@@ -1,0 +1,197 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--color-on-surface, #f0f0f0);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.requestButton {
+  background: linear-gradient(135deg, #2f2f2f, #111);
+  color: #f6f6f6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.requestButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.requestButton:not(:disabled):hover {
+  background: linear-gradient(135deg, #3c3c3c, #191919);
+  transform: translateY(-1px);
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 10, 0.72);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+.table {
+  width: 100%;
+  min-width: 58rem;
+  border-collapse: collapse;
+  color: inherit;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(12, 12, 12, 0.95);
+  text-align: start;
+  padding: 0.85rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 1;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 160ms ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rowSelected {
+  background: rgba(52, 168, 255, 0.18);
+}
+
+.table td {
+  padding: 0.75rem 0.85rem;
+  vertical-align: middle;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.statusBadge[data-variant='reserved'] {
+  background: rgba(52, 168, 255, 0.2);
+  border-color: rgba(52, 168, 255, 0.4);
+}
+
+.statusBadge[data-variant='completed'] {
+  background: rgba(76, 175, 80, 0.24);
+  border-color: rgba(76, 175, 80, 0.42);
+}
+
+.statusBadge[data-variant='failed'],
+.statusBadge[data-variant='cancelled'] {
+  background: rgba(244, 67, 54, 0.22);
+  border-color: rgba(244, 67, 54, 0.44);
+}
+
+.statusBadge[data-variant='expired'] {
+  background: rgba(255, 193, 7, 0.22);
+  border-color: rgba(255, 193, 7, 0.44);
+}
+
+.assignmentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.actionButton {
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(28, 28, 28, 0.9);
+  color: inherit;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionButton:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.detailCard {
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  background: rgba(12, 12, 12, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  gap: 1rem;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detailLabel {
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.badgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.8rem;
+}
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  border-radius: 0.75rem;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(15, 15, 15, 0.65);
+}
+
+.tableWrapper:focus-within {
+  outline: 2px solid rgba(52, 168, 255, 0.6);
+  outline-offset: 2px;
+}

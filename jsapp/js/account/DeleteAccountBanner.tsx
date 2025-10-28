@@ -54,7 +54,7 @@ export default function DeleteAccountBanner() {
           </Text>
 
           <Button p='0' size='sm' onClick={goToProjectsList} rightIcon='arrow-right' variant='transparent'>
-            {t('Go to project list')}
+            {t('Go to Form Manager')}
           </Button>
         </Group>
       )

@@ -9,7 +9,7 @@
  */
 
 import envStore from '#/envStore'
-import { PATHS, PROJECTS_ROUTES, ROUTES } from '#/router/routerConstants'
+import { MODULE_ROUTES, PATHS, PROJECTS_ROUTES, ROUTES } from '#/router/routerConstants'
 import sessionStore from '#/stores/session'
 // import session from '../stores/session';
 // import {when} from 'mobx';
@@ -197,6 +197,11 @@ export function isFormResetRoute(uid: string): boolean {
 /*
  * Additional functions
  */
+
+export function isAnyModuleRoute(): boolean {
+  const path = getCurrentPath()
+  return Object.values(MODULE_ROUTES).some((route) => path === route || path.startsWith(`${route}/`))
+}
 
 export function isAnyFormsRoute(): boolean {
   return getCurrentPath().startsWith(ROUTES.FORMS)

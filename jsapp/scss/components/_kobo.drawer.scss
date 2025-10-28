@@ -55,6 +55,15 @@
     color: colors.$kobo-teal;
     border-left: 3px solid colors.$kobo-teal;
   }
+
+  &--disabled {
+    color: colors.$kobo-gray-400;
+    cursor: not-allowed;
+
+    &:hover {
+      color: colors.$kobo-gray-400;
+    }
+  }
 }
 
 .k-drawer__secondary-icons {

@@ -15,6 +15,7 @@ const config: Config = {
   // Where to find tests. <rootDir> = 'kpi/jsapp/jest'
   roots: [
     '<rootDir>/../js/', // unit tests    🛠️ 'jsapp/js/**/*.tests.ts'
+    '<rootDir>/../src/',
     '<rootDir>/../../test/', // xlform/coffee ☕ 'test/**/*.tests.coffee'
   ],
 

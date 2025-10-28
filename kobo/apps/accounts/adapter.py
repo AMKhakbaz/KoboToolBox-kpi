@@ -6,7 +6,9 @@ from django.contrib.auth import REDIRECT_FIELD_NAME, login
 from django.db import transaction
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils import timezone
+from hub.models import ExtraUserDetail
 from trench.utils import get_mfa_model, user_token_generator
 
 from .mfa.forms import MfaTokenForm
@@ -14,6 +16,14 @@ from .mfa.models import MfaAvailableToUser
 from .mfa.permissions import mfa_allowed_for_user
 from .mfa.views import MfaTokenView
 from .utils import user_has_inactive_paid_subscription
+from .constants import (
+    ACCOUNT_STATUS_ACTIVE,
+    ACCOUNT_STATUS_PENDING_PAYMENT,
+    ACCOUNT_TYPE_ORGANIZATIONAL,
+    ACCOUNT_TYPE_PERSONAL,
+    BASE_MODULE_KEYS,
+    PERSONAL_STORAGE_LIMIT_BYTES,
+)
 
 
 class AccountAdapter(DefaultAccountAdapter):
@@ -70,30 +80,86 @@ class AccountAdapter(DefaultAccountAdapter):
         extra_fields = set(form.fields.keys()).difference(standard_fields)
         with transaction.atomic():
             user = super().save_user(request, user, form, commit)
+            extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
+            extra_details_data = dict(extra_details_obj.data or {})
+            private_data = dict(extra_details_obj.private_data or {})
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
 
             # If the form contains a Terms of Service checkbox (checked)
-            if extra_data.pop('terms_of_service', None):
+            tos_accepted = extra_data.pop('terms_of_service', None)
+            if tos_accepted:
                 # We 'pop' because we don't want to save 'terms_of_service':true
                 # in extra_details.data. Instead, save a now() date string as
                 # the last ToS acceptance time in private_data.
                 # See also: TOSView.post() in apps/accounts/tos.py, which
                 # lets the frontend accept ToS on behalf of existing users.
-                user.extra_details.private_data['last_tos_accept_time'] = (
-                    timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+                private_data['last_tos_accept_time'] = timezone.now().strftime(
+                    '%Y-%m-%dT%H:%M:%SZ'
                 )
 
-            user.extra_details.data.update(extra_data)
+            account_type = extra_data.get('account_type')
+            if account_type not in (
+                ACCOUNT_TYPE_ORGANIZATIONAL,
+                ACCOUNT_TYPE_PERSONAL,
+            ):
+                account_type = ACCOUNT_TYPE_ORGANIZATIONAL
+
+            extra_data['account_type'] = account_type
+
+            if account_type == ACCOUNT_TYPE_PERSONAL:
+                extra_data.update(
+                    {
+                        'payment_confirmed': True,
+                        'account_status': ACCOUNT_STATUS_ACTIVE,
+                        'allowed_modules': list(BASE_MODULE_KEYS),
+                        'storage_limit_bytes': PERSONAL_STORAGE_LIMIT_BYTES,
+                    }
+                )
+                extra_details_data['storage_limit_bytes'] = PERSONAL_STORAGE_LIMIT_BYTES
+            else:
+                extra_data.update(
+                    {
+                        'payment_confirmed': False,
+                        'account_status': ACCOUNT_STATUS_PENDING_PAYMENT,
+                        'allowed_modules': list(BASE_MODULE_KEYS),
+                    }
+                )
+                extra_data.pop('storage_limit_bytes', None)
+                extra_details_data.pop('storage_limit_bytes', None)
+
+            extra_details_data.update(extra_data)
+            extra_details_obj.data = extra_details_data
+            extra_details_obj.private_data = private_data
             if commit:
-                user.extra_details.save()
+                update_fields = ['data']
+                if tos_accepted:
+                    update_fields.append('private_data')
+                extra_details_obj.save(update_fields=update_fields)
         return user
 
     def set_password(self, user, password):
         with transaction.atomic():
-            user.extra_details.password_date_changed = timezone.now()
-            user.extra_details.validated_password = True
-            user.extra_details.save(
+            extra_details_obj, _ = ExtraUserDetail.objects.get_or_create(user=user)
+            extra_details_obj.password_date_changed = timezone.now()
+            extra_details_obj.validated_password = True
+            extra_details_obj.save(
                 update_fields=['password_date_changed', 'validated_password']
             )
             user.set_password(password)
             user.save()
+
+    def get_signup_redirect_url(self, request):
+        user = request.user
+        if user.is_authenticated:
+            try:
+                extra_details = user.extra_details
+            except ExtraUserDetail.DoesNotExist:
+                pass
+            else:
+                data = extra_details.data or {}
+                if (
+                    data.get('account_type') == ACCOUNT_TYPE_ORGANIZATIONAL
+                    and not data.get('payment_confirmed')
+                ):
+                    return reverse('account_payment')
+        return super().get_signup_redirect_url(request)

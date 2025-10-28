@@ -179,6 +179,13 @@ class ServiceUsageCalculator(CachedClass):
         limits = get_organizations_effective_limits([self.organization], True, True)
         org_limits = limits[self.organization.id]
 
+        storage_override = self._get_storage_limit_override()
+        if storage_override is not None:
+            org_limits[f'{UsageType.STORAGE_BYTES}_limit'] = min(
+                org_limits[f'{UsageType.STORAGE_BYTES}_limit'],
+                storage_override,
+            )
+
         return {
             UsageType.SUBMISSION: calculate_usage_balance(
                 limit=org_limits[f'{UsageType.SUBMISSION}_limit'],
@@ -197,6 +204,23 @@ class ServiceUsageCalculator(CachedClass):
                 usage=self.get_nlp_usage_by_type(UsageType.MT_CHARACTERS),
             ),
         }
+
+    def _get_storage_limit_override(self) -> float | None:
+        try:
+            extra_details = self.user.extra_details
+        except self.user.extra_details.RelatedObjectDoesNotExist:
+            return None
+
+        limit = extra_details.data.get('storage_limit_bytes')
+        try:
+            limit_value = float(limit)
+        except (TypeError, ValueError):
+            return None
+
+        if limit_value <= 0:
+            return None
+
+        return limit_value
 
     @cached_class_property(
         key='nlp_usage_counters', serializer=dumps, deserializer=loads

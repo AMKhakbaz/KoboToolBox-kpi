@@ -1,0 +1,18 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="content">
+    <h1>{{ title }}</h1>
+    <p>{% trans "Upload the Bank.sql file to populate the read-only bank schema." %}</p>
+    <form method="post" enctype="multipart/form-data" class="form-horizontal">
+      {% csrf_token %}
+      <div class="form-row">
+        {{ form.as_p }}
+      </div>
+      <div class="submit-row">
+        <button type="submit" class="default">{% trans "Upload" %}</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

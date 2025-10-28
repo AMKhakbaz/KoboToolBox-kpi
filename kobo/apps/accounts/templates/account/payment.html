@@ -1,0 +1,32 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="registration registration--payment">
+  <div class="registration__first-half">
+    <h1>{% trans "Complete your organizational account setup" %}</h1>
+    <p>
+      {% blocktrans %}
+      Confirm your payment to unlock all organizational modules. This temporary page simulates a successful payment for testing purposes.
+      {% endblocktrans %}
+    </p>
+    <form method="post" class="payment-form">
+      {% csrf_token %}
+      <button type="submit" class="kobo-button kobo-button--blue kobo-button--fullwidth">
+        {% trans "Confirm payment" %}
+      </button>
+    </form>
+    <p class="payment-back-link">
+      <a href="/">{% trans "Return to the home page" %}</a>
+    </p>
+  </div>
+  <div class="registration__second-half">
+    <p>
+      {% blocktrans %}
+      After confirmation you will gain access to the Management, Collection, Quality Control, and MRAnalysis modules in addition to the Form Manager and Library.
+      {% endblocktrans %}
+    </p>
+  </div>
+  <div style="clear: both;"></div>
+</div>
+{% endblock %}

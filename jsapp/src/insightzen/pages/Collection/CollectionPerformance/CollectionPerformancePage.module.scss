@@ -1,0 +1,263 @@
+$surface: rgba(255, 255, 255, 0.03);
+$border: rgba(255, 255, 255, 0.08);
+$muted: rgba(255, 255, 255, 0.6);
+
+.pageRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: #f5f5f5;
+}
+
+.card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+.filtersCard {
+  @extend .card;
+  display: grid;
+  gap: 1rem;
+}
+
+.filtersGrid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.multiSelect {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 0.65rem;
+  color: #f5f5f5;
+  min-height: 6rem;
+}
+
+.controlsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  align-items: center;
+}
+
+.actionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.exportButton {
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(91, 167, 255, 0.4);
+  background: rgba(91, 167, 255, 0.18);
+  color: #e7f1ff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border 160ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(91, 167, 255, 0.32);
+    border-color: rgba(91, 167, 255, 0.55);
+  }
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.kpiCard {
+  @extend .card;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.kpiLabel {
+  color: $muted;
+  font-size: 0.85rem;
+}
+
+.kpiValue {
+  font-size: 1.65rem;
+  font-weight: 700;
+}
+
+.chartGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.chartCard {
+  @extend .card;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chartTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.barChart {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  min-height: 180px;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.bar {
+  flex: 0 0 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.barColumn {
+  width: 100%;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(180deg, rgba(91, 167, 255, 0.9), rgba(91, 167, 255, 0.35));
+  transition: opacity 160ms ease;
+}
+
+.barLabel {
+  font-size: 0.8rem;
+  text-align: center;
+  color: $muted;
+}
+
+.pieList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pieItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pieHeader {
+  display: flex;
+  justify-content: space-between;
+  color: $muted;
+  font-size: 0.9rem;
+}
+
+.pieBar {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.pieFill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 207, 122, 0.9), rgba(255, 166, 91, 0.7));
+}
+
+.topTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.topTable th,
+.topTable td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid $border;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.dataTableContainer {
+  @extend .card;
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid $border;
+  text-align: left;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.dataTable th {
+  position: sticky;
+  top: 0;
+  background: rgba(11, 11, 11, 0.96);
+  z-index: 1;
+}
+
+.tableFooter {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: $muted;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginationButton {
+  border-radius: 10px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5f5f5;
+  cursor: pointer;
+  transition: background 160ms ease;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.statusText {
+  color: $muted;
+  font-size: 0.9rem;
+}
+
+.emptyState {
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+  color: $muted;
+}
