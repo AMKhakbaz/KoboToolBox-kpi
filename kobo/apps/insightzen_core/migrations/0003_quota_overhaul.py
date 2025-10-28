@@ -3,6 +3,41 @@ from django.db import migrations, models
 import django.utils.timezone
 
 
+def _ensure_column_sql(table, column, definition):
+    return f"""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1
+                FROM information_schema.columns
+                WHERE table_name = '{table}'
+                  AND column_name = '{column}'
+            ) THEN
+                ALTER TABLE "{table}" ADD COLUMN {definition};
+            END IF;
+        END;
+        $$;
+    """
+
+
+def _safe_add_field(model_name, name, field, *, table, column_sql, column_name=None, reverse_drop=True):
+    column = column_name or name
+    sql = _ensure_column_sql(table, column, column_sql)
+    reverse_sql = f'ALTER TABLE "{table}" DROP COLUMN IF EXISTS "{column}";' if reverse_drop else migrations.RunSQL.noop
+    return migrations.SeparateDatabaseAndState(
+        database_operations=[
+            migrations.RunSQL(sql, reverse_sql),
+        ],
+        state_operations=[
+            migrations.AddField(
+                model_name=model_name,
+                name=name,
+                field=field,
+            )
+        ],
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -18,107 +53,146 @@ class Migration(migrations.Migration):
         migrations.RemoveField(model_name='quotacell', name='metadata'),
         migrations.RemoveField(model_name='samplecontact', name='cell'),
         migrations.RemoveField(model_name='samplecontact', name='scheme'),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='created_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=models.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL),
+        _safe_add_field(
+            'quotascheme',
+            'created_by',
+            models.ForeignKey(blank=True, null=True, on_delete=models.PROTECT, related_name='+', to=settings.AUTH_USER_MODEL),
+            table='insightzen_core_quotascheme',
+            column_sql='"created_by_id" bigint REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED',
+            column_name='created_by_id',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='dimensions',
-            field=models.JSONField(blank=True, default=list),
+        _safe_add_field(
+            'quotascheme',
+            'dimensions',
+            models.JSONField(blank=True, default=list),
+            table='insightzen_core_quotascheme',
+            column_sql='"dimensions" jsonb NOT NULL DEFAULT ''[]''::jsonb',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='is_default',
-            field=models.BooleanField(default=False),
+        _safe_add_field(
+            'quotascheme',
+            'is_default',
+            models.BooleanField(default=False),
+            table='insightzen_core_quotascheme',
+            column_sql='"is_default" boolean NOT NULL DEFAULT false',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='overflow_policy',
-            field=models.CharField(choices=[('strict', 'Strict'), ('soft', 'Soft'), ('weighted', 'Weighted')], default='strict', max_length=16),
+        _safe_add_field(
+            'quotascheme',
+            'overflow_policy',
+            models.CharField(choices=[('strict', 'Strict'), ('soft', 'Soft'), ('weighted', 'Weighted')], default='strict', max_length=16),
+            table='insightzen_core_quotascheme',
+            column_sql='"overflow_policy" varchar(16) NOT NULL DEFAULT ''strict''',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='priority',
-            field=models.IntegerField(default=0),
+        _safe_add_field(
+            'quotascheme',
+            'priority',
+            models.IntegerField(default=0),
+            table='insightzen_core_quotascheme',
+            column_sql='"priority" integer NOT NULL DEFAULT 0',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='published_at',
-            field=models.DateTimeField(blank=True, null=True),
+        _safe_add_field(
+            'quotascheme',
+            'published_at',
+            models.DateTimeField(blank=True, null=True),
+            table='insightzen_core_quotascheme',
+            column_sql='"published_at" timestamp with time zone',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='status',
-            field=models.CharField(choices=[('draft', 'Draft'), ('published', 'Published'), ('archived', 'Archived')], default='draft', max_length=16),
+        _safe_add_field(
+            'quotascheme',
+            'status',
+            models.CharField(choices=[('draft', 'Draft'), ('published', 'Published'), ('archived', 'Archived')], default='draft', max_length=16),
+            table='insightzen_core_quotascheme',
+            column_sql='"status" varchar(16) NOT NULL DEFAULT ''draft''',
         ),
-        migrations.AddField(
-            model_name='quotascheme',
-            name='version',
-            field=models.PositiveIntegerField(default=1),
+        _safe_add_field(
+            'quotascheme',
+            'version',
+            models.PositiveIntegerField(default=1),
+            table='insightzen_core_quotascheme',
+            column_sql='"version" integer NOT NULL DEFAULT 1',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='achieved',
-            field=models.PositiveIntegerField(default=0),
+        _safe_add_field(
+            'quotacell',
+            'achieved',
+            models.PositiveIntegerField(default=0),
+            table='insightzen_core_quotacell',
+            column_sql='"achieved" integer NOT NULL DEFAULT 0',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='in_progress',
-            field=models.PositiveIntegerField(default=0),
+        _safe_add_field(
+            'quotacell',
+            'in_progress',
+            models.PositiveIntegerField(default=0),
+            table='insightzen_core_quotacell',
+            column_sql='"in_progress" integer NOT NULL DEFAULT 0',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='reserved',
-            field=models.PositiveIntegerField(default=0),
+        _safe_add_field(
+            'quotacell',
+            'reserved',
+            models.PositiveIntegerField(default=0),
+            table='insightzen_core_quotacell',
+            column_sql='"reserved" integer NOT NULL DEFAULT 0',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='selector',
-            field=models.JSONField(default=dict),
+        _safe_add_field(
+            'quotacell',
+            'selector',
+            models.JSONField(default=dict),
+            table='insightzen_core_quotacell',
+            column_sql='"selector" jsonb NOT NULL DEFAULT ''{}''::jsonb',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='soft_cap',
-            field=models.PositiveIntegerField(blank=True, null=True),
+        _safe_add_field(
+            'quotacell',
+            'soft_cap',
+            models.PositiveIntegerField(blank=True, null=True),
+            table='insightzen_core_quotacell',
+            column_sql='"soft_cap" integer',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='target',
-            field=models.PositiveIntegerField(default=0),
-            preserve_default=False,
+        _safe_add_field(
+            'quotacell',
+            'target',
+            models.PositiveIntegerField(default=0),
+            table='insightzen_core_quotacell',
+            column_sql='"target" integer NOT NULL DEFAULT 0',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='updated_at',
-            field=models.DateTimeField(auto_now=True, default=django.utils.timezone.now),
-            preserve_default=False,
+        _safe_add_field(
+            'quotacell',
+            'updated_at',
+            models.DateTimeField(auto_now=True, default=django.utils.timezone.now),
+            table='insightzen_core_quotacell',
+            column_sql='"updated_at" timestamp with time zone NOT NULL DEFAULT NOW()',
         ),
-        migrations.AddField(
-            model_name='quotacell',
-            name='weight',
-            field=models.FloatField(default=1.0),
+        _safe_add_field(
+            'quotacell',
+            'weight',
+            models.FloatField(default=1.0),
+            table='insightzen_core_quotacell',
+            column_sql='"weight" double precision NOT NULL DEFAULT 1.0',
         ),
-        migrations.AddField(
-            model_name='samplecontact',
-            name='age_band',
-            field=models.CharField(blank=True, max_length=16, null=True),
+        _safe_add_field(
+            'samplecontact',
+            'age_band',
+            models.CharField(blank=True, max_length=16, null=True),
+            table='insightzen_core_samplecontact',
+            column_sql='"age_band" varchar(16)',
         ),
-        migrations.AddField(
-            model_name='samplecontact',
-            name='gender',
-            field=models.CharField(blank=True, max_length=16, null=True),
+        _safe_add_field(
+            'samplecontact',
+            'gender',
+            models.CharField(blank=True, max_length=16, null=True),
+            table='insightzen_core_samplecontact',
+            column_sql='"gender" varchar(16)',
         ),
-        migrations.AddField(
-            model_name='samplecontact',
-            name='province_code',
-            field=models.CharField(blank=True, max_length=8, null=True),
+        _safe_add_field(
+            'samplecontact',
+            'province_code',
+            models.CharField(blank=True, max_length=8, null=True),
+            table='insightzen_core_samplecontact',
+            column_sql='"province_code" varchar(8)',
         ),
-        migrations.AddField(
-            model_name='samplecontact',
-            name='used_at',
-            field=models.DateTimeField(blank=True, null=True),
+        _safe_add_field(
+            'samplecontact',
+            'used_at',
+            models.DateTimeField(blank=True, null=True),
+            table='insightzen_core_samplecontact',
+            column_sql='"used_at" timestamp with time zone',
         ),
         migrations.AlterField(
             model_name='samplecontact',
