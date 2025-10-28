@@ -38,6 +38,20 @@ def _safe_add_field(model_name, name, field, *, table, column_sql, column_name=N
     )
 
 
+def _safe_remove_constraint(model_name, name, *, table):
+    return migrations.SeparateDatabaseAndState(
+        database_operations=[
+            migrations.RunSQL(
+                f'ALTER TABLE "{table}" DROP CONSTRAINT IF EXISTS "{name}";',
+                migrations.RunSQL.noop,
+            ),
+        ],
+        state_operations=[
+            migrations.RemoveConstraint(model_name=model_name, name=name),
+        ],
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -204,7 +218,11 @@ class Migration(migrations.Migration):
             name='label',
             field=models.CharField(blank=True, max_length=256),
         ),
-        migrations.RemoveConstraint(model_name='quotacell', name='insightzen_quota_cell_unique'),
+        _safe_remove_constraint(
+            'quotacell',
+            'insightzen_quota_cell_unique',
+            table='insightzen_core_quotacell',
+        ),
         migrations.AddConstraint(
             model_name='quotacell',
             constraint=models.UniqueConstraint(fields=('scheme', 'selector'), name='insightzen_unique_cell_selector'),
