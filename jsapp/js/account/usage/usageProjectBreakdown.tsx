@@ -95,7 +95,7 @@ const ProjectBreakdown = () => {
 
   const usageName: ProjectFieldDefinition = {
     name: 'name',
-    label: t('##count## Projects').replace('##count##', projectData.count),
+    label: t('Form Manager (##count##)').replace('##count##', projectData.count),
     apiFilteringName: 'name',
     apiOrderingName: 'name',
     availableConditions: [],
@@ -187,7 +187,7 @@ const ProjectBreakdown = () => {
           <tbody>
             <tr>
               <td colSpan={7} style={{ border: 'none' }}>
-                <div className={styles.emptyMessage}>{t('There are no projects to display.')}</div>
+                <div className={styles.emptyMessage}>{t('There are no Form Manager items to display.')}</div>
               </td>
             </tr>
           </tbody>
