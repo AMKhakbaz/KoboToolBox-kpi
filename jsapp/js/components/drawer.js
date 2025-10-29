@@ -148,7 +148,7 @@ const Drawer = observer(
       return (
         <bem.KDrawer>
           <bem.KDrawer__primaryIcons>
-            <DrawerLink label={t('Projects')} linkto={PROJECTS_ROUTES.MY_PROJECTS} k-icon='projects' />
+            <DrawerLink label={t('Form Manager')} linkto={PROJECTS_ROUTES.MY_PROJECTS} k-icon='projects' />
             <DrawerLink label={t('Library')} linkto={ROUTES.LIBRARY} k-icon='library' />
           </bem.KDrawer__primaryIcons>
 
