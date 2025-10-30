@@ -875,6 +875,11 @@ export interface AccountResponse {
     uid: string
   }
   extra_details__uid: string
+  account_type: 'organizational' | 'personal'
+  payment_status: 'pending' | 'confirmed' | 'not_required'
+  module_access: string[]
+  storage_quota_bytes: number | null
+  payment_confirmed_at: string | null
 }
 
 export interface AccountRequest {

@@ -1,9 +1,29 @@
 from django.conf import settings
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from kobo.apps.openrosa.apps.main.models import UserProfile
 from kpi.fields import KpiUidField
 from kpi.mixins import StandardizeSearchableFieldMixin
+
+
+MODULE_FORM_MANAGER = 'form_manager'
+MODULE_LIBRARY = 'library'
+MODULE_ALL = 'all'
+
+
+class AccountTypeChoices(models.TextChoices):
+    ORGANIZATIONAL = 'organizational', _('سازمانی')
+    PERSONAL = 'personal', _('شخصی')
+
+
+class PaymentStatusChoices(models.TextChoices):
+    NOT_REQUIRED = 'not_required', _('Payment not required')
+    PENDING = 'pending', _('Payment pending')
+    CONFIRMED = 'confirmed', _('Payment confirmed')
+
+
+PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES = 500 * 1024 * 1024
 
 
 class ExtraUserDetail(StandardizeSearchableFieldMixin, models.Model):
@@ -19,6 +39,19 @@ class ExtraUserDetail(StandardizeSearchableFieldMixin, models.Model):
     date_removed = models.DateTimeField(null=True, blank=True)
     password_date_changed = models.DateTimeField(null=True, blank=True)
     validated_password = models.BooleanField(default=True)
+    account_type = models.CharField(
+        max_length=32,
+        choices=AccountTypeChoices.choices,
+        default=AccountTypeChoices.PERSONAL,
+    )
+    payment_status = models.CharField(
+        max_length=32,
+        choices=PaymentStatusChoices.choices,
+        default=PaymentStatusChoices.NOT_REQUIRED,
+    )
+    payment_confirmed_at = models.DateTimeField(null=True, blank=True)
+    module_access = models.JSONField(default=list, blank=True)
+    storage_quota_bytes = models.BigIntegerField(null=True, blank=True)
 
     def __str__(self):
         return "{}'s data: {}".format(self.user.__str__(), repr(self.data))

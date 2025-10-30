@@ -2,12 +2,23 @@ from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.forms import SignupForm
 from constance import config
 from django.conf import settings
-from django.contrib.auth import REDIRECT_FIELD_NAME, login
+from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model, login
 from django.db import transaction
 from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils import timezone
 from trench.utils import get_mfa_model, user_token_generator
+
+from hub.models.extra_user_detail import (
+    AccountTypeChoices,
+    MODULE_FORM_MANAGER,
+    MODULE_LIBRARY,
+    PaymentStatusChoices,
+    PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES,
+)
+from kobo.apps.openrosa.apps.main.models.user_profile import UserProfile
+from kpi.utils.permissions import grant_default_model_level_perms
 
 from .mfa.forms import MfaTokenForm
 from .mfa.models import MfaAvailableToUser
@@ -71,6 +82,9 @@ class AccountAdapter(DefaultAccountAdapter):
         with transaction.atomic():
             user = super().save_user(request, user, form, commit)
             extra_data = {k: form.cleaned_data[k] for k in extra_fields}
+            account_type = extra_data.pop(
+                'account_type', AccountTypeChoices.PERSONAL
+            )
 
             # If the form contains a Terms of Service checkbox (checked)
             if extra_data.pop('terms_of_service', None):
@@ -83,10 +97,44 @@ class AccountAdapter(DefaultAccountAdapter):
                     timezone.now().strftime('%Y-%m-%dT%H:%M:%SZ')
                 )
 
-            user.extra_details.data.update(extra_data)
+            extra_details = user.extra_details
+            extra_details.data.update(extra_data)
+            self._apply_account_configuration(user, account_type)
             if commit:
-                user.extra_details.save()
+                extra_details.save()
+                user.user_permissions.clear()
+                grant_default_model_level_perms(user)
+
+        if (
+            request is not None
+            and hasattr(request, 'session')
+            and account_type == AccountTypeChoices.ORGANIZATIONAL
+        ):
+            request.session['pending_signup_user_pk'] = user.pk
+            request.session.modified = True
         return user
+
+    def get_signup_redirect_url(self, request):
+        user_model = get_user_model()
+        if hasattr(request, 'session'):
+            pending_pk = request.session.pop('pending_signup_user_pk', None)
+            if pending_pk:
+                try:
+                    user = user_model.objects.get(pk=pending_pk)
+                except user_model.DoesNotExist:
+                    pass
+                else:
+                    extra_details = user.extra_details
+                    if (
+                        extra_details.account_type
+                        == AccountTypeChoices.ORGANIZATIONAL
+                        and extra_details.payment_status
+                        == PaymentStatusChoices.PENDING
+                    ):
+                        request.session['pending_payment_user_pk'] = user.pk
+                        request.session.modified = True
+                        return reverse('payments-temp-confirm')
+        return super().get_signup_redirect_url(request)
 
     def set_password(self, user, password):
         with transaction.atomic():
@@ -97,3 +145,27 @@ class AccountAdapter(DefaultAccountAdapter):
             )
             user.set_password(password)
             user.save()
+
+    def _apply_account_configuration(self, user, account_type):
+        extra_details = user.extra_details
+        extra_details.account_type = account_type
+        if account_type == AccountTypeChoices.ORGANIZATIONAL:
+            extra_details.payment_status = PaymentStatusChoices.PENDING
+            extra_details.module_access = []
+            extra_details.storage_quota_bytes = None
+            extra_details.payment_confirmed_at = None
+        else:
+            extra_details.payment_status = PaymentStatusChoices.NOT_REQUIRED
+            extra_details.module_access = [
+                MODULE_FORM_MANAGER,
+                MODULE_LIBRARY,
+            ]
+            extra_details.storage_quota_bytes = (
+                PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES
+            )
+            extra_details.payment_confirmed_at = None
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if profile.account_type != account_type:
+            profile.account_type = account_type
+            profile.save(update_fields=['account_type'])

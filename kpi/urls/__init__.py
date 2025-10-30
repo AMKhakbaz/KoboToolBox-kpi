@@ -5,6 +5,7 @@ from django.views.i18n import JavaScriptCatalog
 
 from hub.models import ConfigurationFile
 from kpi.views import authorized_application_authenticate_user, home, modern_browsers
+from kpi.views.payments import TemporaryPaymentConfirmationView
 from kpi.views.current_user import CurrentUserViewSet
 from kpi.views.environment import EnvironmentView
 from kpi.views.token import TokenView
@@ -52,6 +53,11 @@ urlpatterns = [
     path('environment/', EnvironmentView.as_view(), name='environment'),
     re_path(r'^configurationfile/(?P<slug>[^/]+)/?',
             ConfigurationFile.content_view, name='configurationfile'),
+    path(
+        'payments/temp-confirm/',
+        TemporaryPaymentConfirmationView.as_view(),
+        name='payments-temp-confirm',
+    ),
     re_path(r'^private-media/', include(private_storage.urls)),
     # Statistics for superusers
     re_path(

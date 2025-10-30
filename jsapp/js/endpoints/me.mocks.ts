@@ -38,4 +38,9 @@ export const meMockResponse: AccountResponse = {
     uid: 'orgWiPMsyx4oNEHXfqGhrbzt',
   },
   extra_details__uid: 'uTcCX9wL5royoPb4mHWcBz',
+  account_type: 'personal',
+  payment_status: 'not_required',
+  module_access: ['form_manager', 'library'],
+  storage_quota_bytes: 524288000,
+  payment_confirmed_at: null,
 }

@@ -10,6 +10,7 @@ from model_bakery import baker
 from pyquery import PyQuery
 from rest_framework import status
 
+from hub.models.extra_user_detail import AccountTypeChoices
 from hub.models.sitewide_message import SitewideMessage
 from kobo.apps.accounts.forms import SignupForm, SocialSignupForm
 from kpi.utils.json import LazyJSONSerializable
@@ -36,7 +37,12 @@ class AccountFormsTestCase(TestCase):
         bad_email = self.user.email.replace('@', '+bad@')
         form = SocialSignupForm(
             sociallogin=self.sociallogin,
-            data={'email': bad_email, 'name': 'name', 'username': 'uname'},
+            data={
+                'email': bad_email,
+                'name': 'name',
+                'username': 'uname',
+                'account_type': AccountTypeChoices.PERSONAL,
+            },
         )
         self.assertEquals(form.errors['email'], ['Email must match SSO server email'])
 
@@ -246,11 +252,27 @@ class AccountFormsTestCase(TestCase):
             'password1': username,
             'password2': username,
             'username': username,
+            'account_type': AccountTypeChoices.PERSONAL,
         }
         response = self.client.post(self.url, data)
         assert response.status_code == status.HTTP_302_FOUND
         # raise DoesNotExist if registration failed
         get_user_model().objects.get(username=username)
+
+    def test_account_type_required(self):
+        username = 'missing_account_type'
+        email = username + '@example.com'
+        data = {
+            'name': username,
+            'email': email,
+            'password1': username,
+            'password2': username,
+            'username': username,
+        }
+        response = self.client.post(self.url, data)
+        assert response.status_code == status.HTTP_200_OK
+        form = response.context['form']
+        assert 'account_type' in form.errors
 
     def test_registration_when_tos_required(self):
         SitewideMessage.objects.create(
@@ -268,6 +290,7 @@ class AccountFormsTestCase(TestCase):
             'password1': username,
             'password2': username,
             'username': username,
+            'account_type': AccountTypeChoices.PERSONAL,
         }
         response = self.client.post(self.url, data)
         # Django returns a 200 even when there are field errors
@@ -302,6 +325,7 @@ class AccountFormsTestCase(TestCase):
             'email': kwargs.get('email', 'double@foo.bar'),
             'password1': 'tooxox',
             'password2': 'tooxox',
+            'account_type': AccountTypeChoices.PERSONAL,
         }
 
         with override_config(
