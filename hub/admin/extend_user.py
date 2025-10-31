@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from constance import config
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import SimpleListFilter
@@ -13,6 +14,7 @@ from django.forms import CharField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 from kobo.apps.accounts.mfa.models import MfaMethod
 from kobo.apps.accounts.validators import (
@@ -27,6 +29,9 @@ from kobo.apps.trash_bin.exceptions import TrashIntegrityError
 from kobo.apps.trash_bin.models.account import AccountTrash
 from kobo.apps.trash_bin.utils import move_to_trash
 from kpi.models.asset import AssetDeploymentStatus
+
+from hub.models.extra_user_detail import AccountTypeChoices
+from kobo.apps.accounts.utils import apply_account_configuration
 
 from .filters import UserAdvancedSearchFilter
 from .mixins import AdvancedSearchMixin
@@ -43,7 +48,26 @@ def validate_superuser_auth(obj) -> bool:
     return True
 
 
-class UserChangeForm(DjangoUserChangeForm):
+class AccountTypeAdminFormMixin(forms.Form):
+
+    account_type = forms.ChoiceField(
+        label=_('Account type'),
+        choices=AccountTypeChoices.choices,
+        widget=forms.RadioSelect,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['account_type'].initial = AccountTypeChoices.PERSONAL
+
+        instance = getattr(self, 'instance', None)
+        if instance and getattr(instance, 'pk', None):
+            extra_details = getattr(instance, 'extra_details', None)
+            if extra_details and extra_details.account_type:
+                self.fields['account_type'].initial = extra_details.account_type
+
+
+class UserChangeForm(AccountTypeAdminFormMixin, DjangoUserChangeForm):
 
     username = CharField(
         label='username',
@@ -71,7 +95,7 @@ class UserChangeForm(DjangoUserChangeForm):
         return cleaned_data
 
 
-class UserCreationForm(DjangoUserCreationForm):
+class UserCreationForm(AccountTypeAdminFormMixin, DjangoUserCreationForm):
 
     username = CharField(
         label='username',
@@ -169,6 +193,7 @@ class ExtendedUserAdmin(AdvancedSearchMixin, UserAdmin):
         'username',
         'email',
         'is_active',
+        'get_account_type',
         'date_joined',
         'get_date_removal_requested',
         'get_date_removed',
@@ -193,8 +218,21 @@ class ExtendedUserAdmin(AdvancedSearchMixin, UserAdmin):
     )
     fieldsets = UserAdmin.fieldsets + (
         (
+            'Account configuration',
+            {'fields': ('account_type',)},
+        ),
+        (
             'Deployed forms and Submissions Counts',
             {'fields': ('deployed_forms_count', 'monthly_submission_count')},
+        ),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (
+            'Account configuration',
+            {
+                'classes': ('wide',),
+                'fields': ('account_type',),
+            },
         ),
     )
     actions = ['remove', 'delete', 'mark_inactive']
@@ -283,6 +321,13 @@ class ExtendedUserAdmin(AdvancedSearchMixin, UserAdmin):
             return 'Removal pending'
 
         return 'Inactive'
+
+    @admin.display(description='Account type')
+    def get_account_type(self, obj):
+        extra_details = getattr(obj, 'extra_details', None)
+        if not extra_details:
+            return '-'
+        return extra_details.get_account_type_display()
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -405,3 +450,30 @@ class ExtendedUserAdmin(AdvancedSearchMixin, UserAdmin):
             message += f'View <a href="{url}">trash.</a>'
 
         return mark_safe(message)
+
+    def save_model(self, request, obj, form, change):
+        account_type = form.cleaned_data.get(
+            'account_type', AccountTypeChoices.PERSONAL
+        )
+        previous_account_type = None
+
+        if change and obj.pk:
+            extra_details = getattr(obj, 'extra_details', None)
+            if extra_details:
+                previous_account_type = extra_details.account_type
+
+        super().save_model(request, obj, form, change)
+
+        apply_account_configuration(
+            obj,
+            account_type,
+            save_extra_details=True,
+            reset_model_permissions=True,
+        )
+
+        if change and previous_account_type != account_type:
+            self.log_change(
+                request,
+                obj,
+                {'changed': {'fields': ('Account type',)}},
+            )

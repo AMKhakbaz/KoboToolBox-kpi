@@ -10,21 +10,13 @@ from django.urls import reverse
 from django.utils import timezone
 from trench.utils import get_mfa_model, user_token_generator
 
-from hub.models.extra_user_detail import (
-    AccountTypeChoices,
-    MODULE_FORM_MANAGER,
-    MODULE_LIBRARY,
-    PaymentStatusChoices,
-    PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES,
-)
-from kobo.apps.openrosa.apps.main.models.user_profile import UserProfile
-from kpi.utils.permissions import grant_default_model_level_perms
+from hub.models.extra_user_detail import AccountTypeChoices
 
 from .mfa.forms import MfaTokenForm
 from .mfa.models import MfaAvailableToUser
 from .mfa.permissions import mfa_allowed_for_user
 from .mfa.views import MfaTokenView
-from .utils import user_has_inactive_paid_subscription
+from .utils import apply_account_configuration, user_has_inactive_paid_subscription
 
 
 class AccountAdapter(DefaultAccountAdapter):
@@ -99,11 +91,14 @@ class AccountAdapter(DefaultAccountAdapter):
 
             extra_details = user.extra_details
             extra_details.data.update(extra_data)
-            self._apply_account_configuration(user, account_type)
+            apply_account_configuration(
+                user,
+                account_type,
+                save_extra_details=False,
+                reset_model_permissions=commit,
+            )
             if commit:
                 extra_details.save()
-                user.user_permissions.clear()
-                grant_default_model_level_perms(user)
 
         if (
             request is not None
@@ -146,26 +141,3 @@ class AccountAdapter(DefaultAccountAdapter):
             user.set_password(password)
             user.save()
 
-    def _apply_account_configuration(self, user, account_type):
-        extra_details = user.extra_details
-        extra_details.account_type = account_type
-        if account_type == AccountTypeChoices.ORGANIZATIONAL:
-            extra_details.payment_status = PaymentStatusChoices.PENDING
-            extra_details.module_access = []
-            extra_details.storage_quota_bytes = None
-            extra_details.payment_confirmed_at = None
-        else:
-            extra_details.payment_status = PaymentStatusChoices.NOT_REQUIRED
-            extra_details.module_access = [
-                MODULE_FORM_MANAGER,
-                MODULE_LIBRARY,
-            ]
-            extra_details.storage_quota_bytes = (
-                PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES
-            )
-            extra_details.payment_confirmed_at = None
-
-        profile, _ = UserProfile.objects.get_or_create(user=user)
-        if profile.account_type != account_type:
-            profile.account_type = account_type
-            profile.save(update_fields=['account_type'])

@@ -17,6 +17,7 @@ from kobo.apps.project_views.views import ProjectViewViewSet
 from kobo.apps.user_reports.views import UserReportsViewSet
 from kpi.constants import API_NAMESPACES
 from kpi.renderers import BasicHTMLRenderer
+from kpi.views.v2.admin_user import AdminUserAccountViewSet
 from kpi.views.v2.asset import AssetViewSet
 from kpi.views.v2.asset_counts import AssetCountsViewSet
 from kpi.views.v2.asset_export_settings import AssetExportSettingsViewSet
@@ -187,6 +188,7 @@ router_api_v2.register(r'permissions', PermissionViewSet)
 router_api_v2.register(r'project-views', ProjectViewViewSet)
 router_api_v2.register(r'service_usage',
                        ServiceUsageViewSet, basename='service-usage')
+router_api_v2.register(r'admin/users', AdminUserAccountViewSet, basename='admin-users')
 router_api_v2.register(r'users', UserViewSet, basename='user-kpi')
 router_api_v2.register(r'user-reports', UserReportsViewSet, basename='user-reports')
 router_api_v2.register(r'tags', TagViewSet, basename='tags')
