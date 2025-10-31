@@ -61,6 +61,8 @@
     color: colors.$kobo-gray-400;
     cursor: not-allowed;
     border-left-color: transparent;
+    pointer-events: none;
+    opacity: 0.6;
   }
 }
 

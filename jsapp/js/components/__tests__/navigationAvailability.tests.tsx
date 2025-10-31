@@ -1,10 +1,13 @@
 import React from 'react'
 
 import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 
-import { PRIMARY_NAV_LINKS } from '#/components/drawer'
+import { PrimaryNavigation } from '#/components/drawer'
+import { NAVIGATION_MODULES, ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
 import RequireOrganizationalAccount from '#/router/RequireOrganizationalAccount'
 import { useSession } from '#/stores/useSession'
+import '#/bemComponents'
 
 jest.mock('#/stores/useSession')
 
@@ -12,7 +15,7 @@ const mockedUseSession = useSession as jest.MockedFunction<typeof useSession>
 
 describe('primary navigation configuration', () => {
   it('marks advanced modules as organizational only', () => {
-    const orgOnlyLabels = PRIMARY_NAV_LINKS.filter((link) => link.requiresOrganizational).map(
+    const orgOnlyLabels = NAVIGATION_MODULES.filter((link) => link.requiresOrganizational).map(
       (link) => link.label,
     )
 
@@ -25,11 +28,49 @@ describe('primary navigation configuration', () => {
   })
 
   it('keeps core modules available to all accounts', () => {
-    const alwaysAvailable = PRIMARY_NAV_LINKS.filter((link) => !link.requiresOrganizational).map(
+    const alwaysAvailable = NAVIGATION_MODULES.filter((link) => !link.requiresOrganizational).map(
       (link) => link.label,
     )
 
     expect(alwaysAvailable).to.include.members(['Form Manager', 'Library'])
+  })
+})
+
+describe('PrimaryNavigation rendering', () => {
+  const translate = (value: string) => (global as any).t(value)
+
+  it('disables organizational modules for personal accounts', () => {
+    render(
+      <MemoryRouter>
+        <PrimaryNavigation accountType='personal' />
+      </MemoryRouter>,
+    )
+
+    const orgTooltip = translate(ORGANIZATION_ONLY_TOOLTIP)
+
+    NAVIGATION_MODULES.filter((module) => module.requiresOrganizational).forEach((module) => {
+      const link = screen.getByLabelText(translate(module.label))
+
+      expect(link.getAttribute('aria-disabled')).to.equal('true')
+      expect(link.getAttribute('title')).to.equal(orgTooltip)
+      expect(link.tagName).to.equal('SPAN')
+    })
+  })
+
+  it('keeps modules navigable for organizational accounts', () => {
+    render(
+      <MemoryRouter>
+        <PrimaryNavigation accountType='organizational' />
+      </MemoryRouter>,
+    )
+
+    NAVIGATION_MODULES.forEach((module) => {
+      const link = screen.getByLabelText(translate(module.label))
+
+      expect(link.hasAttribute('aria-disabled')).to.equal(false)
+      expect(link.getAttribute('title')).to.equal(translate(module.label))
+      expect(link.tagName).to.equal('A')
+    })
   })
 })
 

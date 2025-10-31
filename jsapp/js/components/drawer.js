@@ -12,54 +12,17 @@ import HelpBubble from '#/components/support/helpBubble'
 import envStore from '#/envStore'
 import pageState from '#/pageState.store'
 import RequireAuth from '#/router/requireAuth'
-import { PROJECTS_ROUTES, ROUTES } from '#/router/routerConstants'
+import { ROUTES } from '#/router/routerConstants'
 import { COMMON_QUERIES, MODAL_TYPES } from '../constants'
 import SidebarFormsList from '../lists/sidebarForms'
 import mixins from '../mixins'
 import { router, routerIsActive, withRouter } from '../router/legacy'
 import { searches } from '../searches'
 import sessionStore from '../stores/session'
+import { useSession } from '../stores/useSession'
+import { NAVIGATION_MODULES, ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
 
 const AccountSidebar = lazy(() => import('#/account/accountSidebar'))
-
-export const PRIMARY_NAV_LINKS = [
-  {
-    label: 'Form Manager',
-    route: PROJECTS_ROUTES.MY_PROJECTS,
-    icon: 'projects',
-    requiresOrganizational: false,
-  },
-  {
-    label: 'Management',
-    route: ROUTES.MANAGEMENT,
-    icon: 'project-overview',
-    requiresOrganizational: true,
-  },
-  {
-    label: 'Collection',
-    route: ROUTES.COLLECTION,
-    icon: 'folder',
-    requiresOrganizational: true,
-  },
-  {
-    label: 'Quality Control',
-    route: ROUTES.QUALITY_CONTROL,
-    icon: 'reports',
-    requiresOrganizational: true,
-  },
-  {
-    label: 'MRAnalysis',
-    route: ROUTES.MR_ANALYSIS,
-    icon: 'heatmap',
-    requiresOrganizational: true,
-  },
-  {
-    label: 'Library',
-    route: ROUTES.LIBRARY,
-    icon: 'library',
-    requiresOrganizational: false,
-  },
-]
 
 const INITIAL_STATE = {
   headerFilters: 'forms',
@@ -173,6 +136,8 @@ class DrawerLink extends React.Component {
           data-tip={tooltip}
           aria-disabled='true'
           aria-label={ariaLabel}
+          role='link'
+          tabIndex={-1}
           title={tooltip}
         >
           {icon}
@@ -196,6 +161,32 @@ class DrawerLink extends React.Component {
   }
 }
 
+export const PrimaryNavigation = ({ accountType }) => {
+  const isOrganizational = accountType === 'organizational'
+  const orgOnlyTooltip = t(ORGANIZATION_ONLY_TOOLTIP)
+
+  return (
+    <bem.KDrawer__primaryIcons>
+      {NAVIGATION_MODULES.map((module) => {
+        const label = t(module.label)
+        const disabled = module.requiresOrganizational && !isOrganizational
+        const tooltip = disabled ? orgOnlyTooltip : label
+
+        return (
+          <DrawerLink
+            key={module.id}
+            label={label}
+            linkto={module.route}
+            k-icon={module.icon}
+            disabled={disabled}
+            tooltip={tooltip}
+          />
+        )
+      })}
+    </bem.KDrawer__primaryIcons>
+  )
+}
+
 const Drawer = observer(
   class Drawer extends Reflux.Component {
     constructor(props) {
@@ -214,31 +205,9 @@ const Drawer = observer(
         return null
       }
 
-      const account = sessionStore.currentAccount
-      const accountType = account && account.account_type ? account.account_type : null
-      const isOrganizational = accountType === 'organizational'
-      const orgOnlyTooltip = t('Available for organizational accounts')
-
       return (
         <bem.KDrawer>
-          <bem.KDrawer__primaryIcons>
-            {PRIMARY_NAV_LINKS.map((link) => {
-              const label = t(link.label)
-              const disabled = link.requiresOrganizational && !isOrganizational
-              const tooltip = disabled ? orgOnlyTooltip : label
-
-              return (
-                <DrawerLink
-                  key={link.route}
-                  label={label}
-                  linkto={link.route}
-                  k-icon={link.icon}
-                  disabled={disabled}
-                  tooltip={tooltip}
-                />
-              )
-            })}
-          </bem.KDrawer__primaryIcons>
+          <PrimaryNavigation accountType={this.props.accountType} />
 
           <bem.KDrawer__sidebar>
             {this.isLibrary() && (
@@ -280,4 +249,11 @@ reactMixin(Drawer.prototype, searches.common)
 reactMixin(Drawer.prototype, mixins.droppable)
 reactMixin(Drawer.prototype, mixins.contextRouter)
 
-export default withRouter(Drawer)
+const DrawerWithSession = (props) => {
+  const { currentLoggedAccount } = useSession()
+  const accountType = currentLoggedAccount && currentLoggedAccount.account_type
+
+  return <Drawer {...props} accountType={accountType} />
+}
+
+export default withRouter(DrawerWithSession)
