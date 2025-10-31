@@ -22,6 +22,45 @@ import sessionStore from '../stores/session'
 
 const AccountSidebar = lazy(() => import('#/account/accountSidebar'))
 
+export const PRIMARY_NAV_LINKS = [
+  {
+    label: 'Form Manager',
+    route: PROJECTS_ROUTES.MY_PROJECTS,
+    icon: 'projects',
+    requiresOrganizational: false,
+  },
+  {
+    label: 'Management',
+    route: ROUTES.MANAGEMENT,
+    icon: 'project-overview',
+    requiresOrganizational: true,
+  },
+  {
+    label: 'Collection',
+    route: ROUTES.COLLECTION,
+    icon: 'folder',
+    requiresOrganizational: true,
+  },
+  {
+    label: 'Quality Control',
+    route: ROUTES.QUALITY_CONTROL,
+    icon: 'reports',
+    requiresOrganizational: true,
+  },
+  {
+    label: 'MRAnalysis',
+    route: ROUTES.MR_ANALYSIS,
+    icon: 'heatmap',
+    requiresOrganizational: true,
+  },
+  {
+    label: 'Library',
+    route: ROUTES.LIBRARY,
+    icon: 'library',
+    requiresOrganizational: false,
+  },
+]
+
 const INITIAL_STATE = {
   headerFilters: 'forms',
   searchContext: searches.getSearchContext('forms', {
@@ -93,6 +132,10 @@ class DrawerLink extends React.Component {
     autoBind(this)
   }
   onClick(evt) {
+    if (this.props.disabled) {
+      evt.preventDefault()
+      return
+    }
     if (!this.props.href) {
       evt.preventDefault()
     }
@@ -102,14 +145,38 @@ class DrawerLink extends React.Component {
   }
   render() {
     const icon = <i className={`k-icon-${this.props['k-icon']}`} />
+    const tooltip = this.props.tooltip || this.props.label
+    const ariaLabel = this.props['aria-label'] || this.props.label
     const classNames = [this.props.class, 'k-drawer__link']
 
+    if (this.props.disabled) {
+      classNames.push('k-drawer__link--disabled')
+    }
+
     let link
-    if (this.props.linkto) {
+    if (this.props.linkto && !this.props.disabled) {
       link = (
-        <NavLink to={this.props.linkto} className={classNames.join(' ')} data-tip={this.props.label}>
+        <NavLink
+          to={this.props.linkto}
+          className={classNames.join(' ')}
+          data-tip={tooltip}
+          aria-label={ariaLabel}
+          title={tooltip}
+        >
           {icon}
         </NavLink>
+      )
+    } else if (this.props.linkto) {
+      link = (
+        <span
+          className={classNames.join(' ')}
+          data-tip={tooltip}
+          aria-disabled='true'
+          aria-label={ariaLabel}
+          title={tooltip}
+        >
+          {icon}
+        </span>
       )
     } else {
       link = (
@@ -117,7 +184,9 @@ class DrawerLink extends React.Component {
           href={this.props.href || '#'}
           className={classNames.join(' ')}
           onClick={this.onClick}
-          data-tip={this.props.label}
+          data-tip={tooltip}
+          aria-label={ariaLabel}
+          title={tooltip}
         >
           {icon}
         </a>
@@ -145,11 +214,30 @@ const Drawer = observer(
         return null
       }
 
+      const account = sessionStore.currentAccount
+      const accountType = account && account.account_type ? account.account_type : null
+      const isOrganizational = accountType === 'organizational'
+      const orgOnlyTooltip = t('Available for organizational accounts')
+
       return (
         <bem.KDrawer>
           <bem.KDrawer__primaryIcons>
-            <DrawerLink label={t('Form Manager')} linkto={PROJECTS_ROUTES.MY_PROJECTS} k-icon='projects' />
-            <DrawerLink label={t('Library')} linkto={ROUTES.LIBRARY} k-icon='library' />
+            {PRIMARY_NAV_LINKS.map((link) => {
+              const label = t(link.label)
+              const disabled = link.requiresOrganizational && !isOrganizational
+              const tooltip = disabled ? orgOnlyTooltip : label
+
+              return (
+                <DrawerLink
+                  key={link.route}
+                  label={label}
+                  linkto={link.route}
+                  k-icon={link.icon}
+                  disabled={disabled}
+                  tooltip={tooltip}
+                />
+              )
+            })}
           </bem.KDrawer__primaryIcons>
 
           <bem.KDrawer__sidebar>

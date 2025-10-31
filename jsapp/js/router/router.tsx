@@ -13,6 +13,7 @@ import projectsRoutes from '#/projects/routes'
 import PermProtectedRoute from '#/router/permProtectedRoute'
 import { injectRouter } from './legacy'
 import RequireAuth from './requireAuth'
+import RequireOrganizationalAccount from './RequireOrganizationalAccount'
 import { PROJECTS_ROUTES, ROUTES } from './routerConstants'
 
 const Reports = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/reports/reports'))
@@ -23,6 +24,18 @@ const FormXform = React.lazy(() => import(/* webpackPrefetch: true */ '#/compone
 const FormJson = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/formJson'))
 const SectionNotFound = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/sectionNotFound'))
 const FormNotFound = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/formNotFound'))
+const ManagementModule = React.lazy(() => import('#/modules/management'))
+const ProjectManagementPage = React.lazy(() => import('#/modules/management/ProjectManagementPage'))
+const TeamOversightPage = React.lazy(() => import('#/modules/management/TeamOversightPage'))
+const CollectionModule = React.lazy(() => import('#/modules/collection'))
+const DataPlanningPage = React.lazy(() => import('#/modules/collection/DataPlanningPage'))
+const FieldOperationsPage = React.lazy(() => import('#/modules/collection/FieldOperationsPage'))
+const QualityControlModule = React.lazy(() => import('#/modules/quality-control'))
+const DataReviewPage = React.lazy(() => import('#/modules/quality-control/DataReviewPage'))
+const IssueTrackingPage = React.lazy(() => import('#/modules/quality-control/IssueTrackingPage'))
+const MRAnalysisModule = React.lazy(() => import('#/modules/mranalysis'))
+const WorkbenchPage = React.lazy(() => import('#/modules/mranalysis/WorkbenchPage'))
+const InsightsPage = React.lazy(() => import('#/modules/mranalysis/InsightsPage'))
 
 export const router = createHashRouter(
   createRoutesFromElements(
@@ -101,6 +114,62 @@ export const router = createHashRouter(
             />
           }
         />
+      </Route>
+      <Route
+        path={ROUTES.MANAGEMENT}
+        element={
+          <RequireAuth>
+            <RequireOrganizationalAccount>
+              <ManagementModule />
+            </RequireOrganizationalAccount>
+          </RequireAuth>
+        }
+      >
+        <Route index element={<Navigate to='project-management' replace />} />
+        <Route path='project-management' element={<ProjectManagementPage />} />
+        <Route path='team-oversight' element={<TeamOversightPage />} />
+      </Route>
+      <Route
+        path={ROUTES.COLLECTION}
+        element={
+          <RequireAuth>
+            <RequireOrganizationalAccount>
+              <CollectionModule />
+            </RequireOrganizationalAccount>
+          </RequireAuth>
+        }
+      >
+        <Route index element={<Navigate to='data-planning' replace />} />
+        <Route path='data-planning' element={<DataPlanningPage />} />
+        <Route path='field-operations' element={<FieldOperationsPage />} />
+      </Route>
+      <Route
+        path={ROUTES.QUALITY_CONTROL}
+        element={
+          <RequireAuth>
+            <RequireOrganizationalAccount>
+              <QualityControlModule />
+            </RequireOrganizationalAccount>
+          </RequireAuth>
+        }
+      >
+        <Route index element={<Navigate to='data-review' replace />} />
+        <Route path='data-review' element={<DataReviewPage />} />
+        <Route path='issue-tracking' element={<IssueTrackingPage />} />
+      </Route>
+      <Route
+        path={ROUTES.MR_ANALYSIS}
+        element={
+          <RequireAuth>
+            <RequireOrganizationalAccount>
+              <MRAnalysisModule />
+            </RequireOrganizationalAccount>
+          </RequireAuth>
+        }
+      >
+        <Route index element={<Navigate to='workbench' replace />} />
+        <Route path='workbench' element={<WorkbenchPage />} />
+        <Route path='insights' element={<InsightsPage />} />
       </Route>
       <Route path={ROUTES.FORMS}>
         <Route

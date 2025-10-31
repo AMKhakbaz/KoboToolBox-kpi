@@ -113,3 +113,32 @@ def grant_all_model_level_perms(
 def is_user_anonymous(user):
     return user.is_anonymous or user.pk == settings.ANONYMOUS_USER_ID
 
+
+def user_can_access_module(user, module_name):
+    """Return whether ``user`` should be allowed to access ``module_name``."""
+
+    from hub.models.extra_user_detail import (
+        AccountTypeChoices,
+        MODULE_ALL,
+        MODULE_FORM_MANAGER,
+        MODULE_LIBRARY,
+    )
+
+    personal_defaults = {MODULE_FORM_MANAGER, MODULE_LIBRARY}
+
+    try:
+        extra_details = user.extra_details
+    except Exception:  # pragma: no cover - defensive, relation should exist
+        return True
+
+    module_access = extra_details.module_access or []
+    account_type = getattr(extra_details, 'account_type', None)
+
+    if account_type == AccountTypeChoices.PERSONAL and module_name not in personal_defaults:
+        return False
+
+    if module_access and MODULE_ALL not in module_access and module_name not in module_access:
+        return False
+
+    return True
+

@@ -11,6 +11,10 @@ export const ROUTES = Object.freeze({
   ACCOUNT_ROOT: '/account',
   ORGANIZATION: '/account/organization',
   LIBRARY: '/library',
+  MANAGEMENT: '/management',
+  COLLECTION: '/collection',
+  QUALITY_CONTROL: '/quality-control',
+  MR_ANALYSIS: '/mranalysis',
   MY_LIBRARY: '/library/my-library',
   PUBLIC_COLLECTIONS: '/library/public-collections',
   NEW_LIBRARY_ITEM: '/library/asset/new',
@@ -56,6 +60,30 @@ export const PROJECTS_ROUTES: { readonly [key: string]: string } = {
   MY_ORG_PROJECTS: '/organization/projects',
   CUSTOM_VIEW: ROUTES.PROJECTS_ROOT + '/:viewUid',
 }
+
+export const MANAGEMENT_ROUTES = Object.freeze({
+  ROOT: ROUTES.MANAGEMENT,
+  PROJECT_MANAGEMENT: ROUTES.MANAGEMENT + '/project-management',
+  TEAM_OVERSIGHT: ROUTES.MANAGEMENT + '/team-oversight',
+})
+
+export const COLLECTION_ROUTES = Object.freeze({
+  ROOT: ROUTES.COLLECTION,
+  DATA_PLANNING: ROUTES.COLLECTION + '/data-planning',
+  FIELD_OPERATIONS: ROUTES.COLLECTION + '/field-operations',
+})
+
+export const QUALITY_CONTROL_ROUTES = Object.freeze({
+  ROOT: ROUTES.QUALITY_CONTROL,
+  DATA_REVIEW: ROUTES.QUALITY_CONTROL + '/data-review',
+  ISSUE_TRACKING: ROUTES.QUALITY_CONTROL + '/issue-tracking',
+})
+
+export const MR_ANALYSIS_ROUTES = Object.freeze({
+  ROOT: ROUTES.MR_ANALYSIS,
+  WORKBENCH: ROUTES.MR_ANALYSIS + '/workbench',
+  INSIGHTS: ROUTES.MR_ANALYSIS + '/insights',
+})
 
 export const PROCESSING_ROUTE_GENERIC = ROUTES.FORM_PROCESSING_ROOT + '/:tabName'
 export const PROCESSING_ROUTES: { readonly [key: string]: string } = {

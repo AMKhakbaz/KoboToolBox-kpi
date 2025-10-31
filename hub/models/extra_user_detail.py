@@ -9,6 +9,10 @@ from kpi.mixins import StandardizeSearchableFieldMixin
 
 MODULE_FORM_MANAGER = 'form_manager'
 MODULE_LIBRARY = 'library'
+MODULE_MANAGEMENT = 'management'
+MODULE_COLLECTION = 'collection'
+MODULE_QUALITY_CONTROL = 'quality_control'
+MODULE_MR_ANALYSIS = 'mr_analysis'
 MODULE_ALL = 'all'
 
 

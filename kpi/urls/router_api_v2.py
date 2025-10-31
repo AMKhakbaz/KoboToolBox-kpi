@@ -32,6 +32,7 @@ from kpi.views.v2.authorized_application_user import AuthorizedApplicationUserVi
 from kpi.views.v2.data import DataViewSet
 from kpi.views.v2.export_task import ExportTaskViewSet
 from kpi.views.v2.import_task import ImportTaskViewSet
+from kpi.views.v2.module_access import ModuleAccessViewSet
 from kpi.views.v2.paired_data import PairedDataViewset
 from kpi.views.v2.permission import PermissionViewSet
 from kpi.views.v2.service_usage import ServiceUsageViewSet
@@ -171,6 +172,7 @@ router_api_v2.register(r'asset_subscriptions',
                        UserAssetSubscriptionViewSet)
 router_api_v2.register(r'asset_usage', AssetUsageViewSet, basename='asset-usage')
 router_api_v2.register(r'imports', ImportTaskViewSet)
+router_api_v2.register(r'modules', ModuleAccessViewSet, basename='module-access')
 router_api_v2.register(r'organizations',
                        OrganizationViewSet, basename='organizations',)
 router_api_v2.register(

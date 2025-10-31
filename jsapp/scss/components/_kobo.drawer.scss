@@ -55,6 +55,13 @@
     color: colors.$kobo-teal;
     border-left: 3px solid colors.$kobo-teal;
   }
+
+  &.k-drawer__link--disabled,
+  &.k-drawer__link--disabled:hover {
+    color: colors.$kobo-gray-400;
+    cursor: not-allowed;
+    border-left-color: transparent;
+  }
 }
 
 .k-drawer__secondary-icons {
