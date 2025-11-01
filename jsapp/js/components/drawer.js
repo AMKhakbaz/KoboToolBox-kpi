@@ -250,8 +250,7 @@ reactMixin(Drawer.prototype, mixins.droppable)
 reactMixin(Drawer.prototype, mixins.contextRouter)
 
 const DrawerWithSession = (props) => {
-  const { currentLoggedAccount } = useSession()
-  const accountType = currentLoggedAccount && currentLoggedAccount.account_type
+  const { accountType } = useSession()
 
   return <Drawer {...props} accountType={accountType} />
 }

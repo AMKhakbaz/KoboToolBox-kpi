@@ -93,6 +93,12 @@ describe('RequireOrganizationalAccount', () => {
     mockedUseSession.mockReturnValue({
       currentLoggedAccount: { account_type: 'personal' } as any,
       isPending: false,
+      accountType: 'personal',
+      isOrganizationAccount: false,
+      isPersonalAccount: true,
+      logOut: jest.fn(),
+      logOutAll: jest.fn(),
+      refreshAccount: jest.fn(),
     })
 
     render(
@@ -122,6 +128,12 @@ describe('RequireOrganizationalAccount', () => {
     mockedUseSession.mockReturnValue({
       currentLoggedAccount: { account_type: 'organizational' } as any,
       isPending: false,
+      accountType: 'organizational',
+      isOrganizationAccount: true,
+      isPersonalAccount: false,
+      logOut: jest.fn(),
+      logOutAll: jest.fn(),
+      refreshAccount: jest.fn(),
     })
 
     render(

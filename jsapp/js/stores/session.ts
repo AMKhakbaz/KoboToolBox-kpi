@@ -19,6 +19,20 @@ class SessionStore {
   isPending = false
   isInitialRoute = true
 
+  get accountType(): AccountResponse['account_type'] | null {
+    return 'email' in this.currentAccount
+      ? (this.currentAccount as AccountResponse).account_type
+      : null
+  }
+
+  get isOrganizationAccount(): boolean {
+    return this.accountType === 'organizational'
+  }
+
+  get isPersonalAccount(): boolean {
+    return this.accountType === 'personal'
+  }
+
   constructor() {
     makeAutoObservable(this)
     this.verifyLogin()

@@ -19,11 +19,7 @@ const RequireOrganizationalAccount = ({ children, moduleLabel }: Props) => {
   const hasWarnedRef = useRef(false)
 
   useEffect(() => {
-    if (
-      session.isPending ||
-      session.currentLoggedAccount?.account_type === 'organizational' ||
-      hasWarnedRef.current
-    ) {
+    if (session.isPending || session.isOrganizationAccount || hasWarnedRef.current) {
       return
     }
 
@@ -33,13 +29,13 @@ const RequireOrganizationalAccount = ({ children, moduleLabel }: Props) => {
     const message = moduleLabel ? `${t(moduleLabel)}: ${tooltip}` : tooltip
 
     notify.warning(message)
-  }, [moduleLabel, session.currentLoggedAccount, session.isPending])
+  }, [moduleLabel, session.isOrganizationAccount, session.isPending])
 
   if (session.isPending || !session.currentLoggedAccount) {
     return <LoadingSpinner />
   }
 
-  if (session.currentLoggedAccount.account_type === 'organizational') {
+  if (session.isOrganizationAccount) {
     return <>{children}</>
   }
 
