@@ -12,6 +12,11 @@ from django.urls import reverse
 from django.utils import timezone
 from model_bakery import baker
 
+from hub.models.extra_user_detail import (
+    AccountTypeChoices,
+    PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES,
+)
+from kobo.apps.accounts.utils import apply_account_configuration
 from kobo.apps.kobo_auth.shortcuts import User
 from kobo.apps.organizations.constants import UsageType
 from kobo.apps.organizations.models import Organization
@@ -500,3 +505,41 @@ class ServiceUsageCalculatorTestCase(BaseServiceUsageTestCase):
 
         for usage_type, _ in UsageType.choices:
             assert usage_balances[usage_type] is None
+
+    def test_personal_accounts_are_limited_to_default_storage_quota(self):
+        apply_account_configuration(
+            self.anotheruser,
+            AccountTypeChoices.PERSONAL,
+            reset_model_permissions=True,
+        )
+        cache.clear()
+
+        calculator = ServiceUsageCalculator(self.anotheruser, disable_cache=True)
+        storage_balance = calculator.get_usage_balances()[UsageType.STORAGE_BYTES]
+
+        assert storage_balance is not None
+        assert (
+            storage_balance['effective_limit']
+            == PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES
+        )
+
+    def test_promoting_personal_account_removes_storage_cap(self):
+        apply_account_configuration(
+            self.anotheruser,
+            AccountTypeChoices.PERSONAL,
+            reset_model_permissions=True,
+        )
+        cache.clear()
+        ServiceUsageCalculator(self.anotheruser, disable_cache=True).get_usage_balances()
+
+        apply_account_configuration(
+            self.anotheruser,
+            AccountTypeChoices.ORGANIZATIONAL,
+            reset_model_permissions=True,
+        )
+        cache.clear()
+
+        calculator = ServiceUsageCalculator(self.anotheruser, disable_cache=True)
+        storage_balance = calculator.get_usage_balances()[UsageType.STORAGE_BYTES]
+
+        assert storage_balance is None

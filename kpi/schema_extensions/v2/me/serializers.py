@@ -36,5 +36,10 @@ MeListResponse = inline_serializer_class(
         'accepted_tos': serializers.BooleanField(),
         'organization': OrganizationField(),
         'extra_details__uid': serializers.CharField(),
+        'account_type': serializers.CharField(),
+        'payment_status': serializers.CharField(),
+        'module_access': serializers.ListField(child=serializers.CharField()),
+        'storage_quota_bytes': serializers.IntegerField(allow_null=True),
+        'payment_confirmed_at': serializers.DateTimeField(allow_null=True),
     },
 )

@@ -1,0 +1,27 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<form method="post" class="payment-confirmation">
+  <div class="registration registration--register">
+    <div class="registration__first-half">
+      <h1>{% trans "Confirm organizational payment" %}</h1>
+      <p>
+        {% blocktrans %}Your organizational account requires payment confirmation before it can be activated. Click the button below to record the payment and continue registration.{% endblocktrans %}
+      </p>
+      {% csrf_token %}
+      <button type="submit" class="kobo-button kobo-button--blue kobo-button--fullwidth">
+        {% trans "Confirm payment" %}
+      </button>
+      <p class="help">
+        {% trans "After confirming, you will be redirected to complete email verification." %}
+      </p>
+    </div>
+    <div class="registration__second-half">
+      <p>
+        {% trans "Need more time? You can return to this page from the link in your registration email." %}
+      </p>
+    </div>
+  </div>
+</form>
+{% endblock %}

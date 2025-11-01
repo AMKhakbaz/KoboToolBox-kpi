@@ -55,6 +55,15 @@
     color: colors.$kobo-teal;
     border-left: 3px solid colors.$kobo-teal;
   }
+
+  &.k-drawer__link--disabled,
+  &.k-drawer__link--disabled:hover {
+    color: colors.$kobo-gray-400;
+    cursor: not-allowed;
+    border-left-color: transparent;
+    pointer-events: none;
+    opacity: 0.6;
+  }
 }
 
 .k-drawer__secondary-icons {
@@ -90,6 +99,47 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+}
+
+.k-drawer__module-sidebar {
+  padding: 24px 24px 16px;
+  overflow-y: auto;
+}
+
+.k-drawer__module-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: colors.$kobo-gray-700;
+  margin: 0 0 12px;
+}
+
+.k-drawer__module-panel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.k-drawer__module-panel-link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: colors.$kobo-gray-700;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: colors.$kobo-gray-100;
+    color: colors.$kobo-teal;
+  }
+
+  &.k-drawer__module-panel-link--active {
+    background-color: colors.$kobo-gray-200;
+    color: colors.$kobo-teal;
+  }
 }
 
 @media screen and (min-width: breakpoints.$bMobileMenu) {

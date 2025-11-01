@@ -1,6 +1,7 @@
 import json
 
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from kobo.apps.kobo_auth.shortcuts import User
 from kobo.apps.openrosa.apps.logger.fields import LazyDefaultBooleanField
@@ -34,6 +35,14 @@ class UserProfile(models.Model):
     is_mfa_active = LazyDefaultBooleanField(default=False)
     validated_password = models.BooleanField(default=True)
     submissions_suspended = models.BooleanField(default=False)
+    account_type = models.CharField(
+        max_length=32,
+        choices=(
+            ('organizational', _('سازمانی')),
+            ('personal', _('شخصی')),
+        ),
+        default='personal',
+    )
 
     class Meta:
         app_label = 'main'

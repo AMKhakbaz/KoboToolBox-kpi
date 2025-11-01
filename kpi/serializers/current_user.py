@@ -53,6 +53,11 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     accepted_tos = serializers.SerializerMethodField()
     organization = serializers.SerializerMethodField()
     extra_details__uid = serializers.SerializerMethodField()
+    account_type = serializers.SerializerMethodField()
+    payment_status = serializers.SerializerMethodField()
+    module_access = serializers.SerializerMethodField()
+    storage_quota_bytes = serializers.SerializerMethodField()
+    payment_confirmed_at = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -75,6 +80,11 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'accepted_tos',
             'organization',
             'extra_details__uid',
+            'account_type',
+            'payment_status',
+            'module_access',
+            'storage_quota_bytes',
+            'payment_confirmed_at',
         )
         read_only_fields = (
             'email',
@@ -159,6 +169,49 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_extra_details__uid(self, obj):
         return obj.extra_details.uid
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_account_type(self, obj):
+        try:
+            account_type = obj.extra_details.account_type
+        except Exception:  # pragma: no cover - defensive
+            return None
+
+        if account_type == ExtraUserDetail.AccountTypeChoices.ORGANIZATIONAL:
+            return 'organization'
+
+        return account_type
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_payment_status(self, obj):
+        try:
+            return obj.extra_details.payment_status
+        except Exception:  # pragma: no cover - defensive
+            return None
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_payment_confirmed_at(self, obj):
+        try:
+            timestamp = obj.extra_details.payment_confirmed_at
+        except Exception:  # pragma: no cover - defensive
+            return None
+        if not timestamp:
+            return None
+        return timestamp.astimezone(ZoneInfo('UTC')).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_storage_quota_bytes(self, obj):
+        try:
+            return obj.extra_details.storage_quota_bytes
+        except Exception:  # pragma: no cover - defensive
+            return None
+
+    @extend_schema_field(OpenApiTypes.ANY)
+    def get_module_access(self, obj):
+        try:
+            return obj.extra_details.module_access or []
+        except Exception:  # pragma: no cover - defensive
+            return []
 
     def to_representation(self, obj):
         if obj.is_anonymous:

@@ -4,7 +4,7 @@ import { Button } from '@mantine/core'
 import { observer } from 'mobx-react'
 import autoBind from 'react-autobind'
 import reactMixin from 'react-mixin'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import Reflux from 'reflux'
 import bem from '#/bem'
 import LibrarySidebar from '#/components/library/librarySidebar'
@@ -12,13 +12,15 @@ import HelpBubble from '#/components/support/helpBubble'
 import envStore from '#/envStore'
 import pageState from '#/pageState.store'
 import RequireAuth from '#/router/requireAuth'
-import { PROJECTS_ROUTES, ROUTES } from '#/router/routerConstants'
+import { ROUTES } from '#/router/routerConstants'
 import { COMMON_QUERIES, MODAL_TYPES } from '../constants'
 import SidebarFormsList from '../lists/sidebarForms'
 import mixins from '../mixins'
 import { router, routerIsActive, withRouter } from '../router/legacy'
 import { searches } from '../searches'
 import sessionStore from '../stores/session'
+import { useSession } from '../stores/useSession'
+import { NAVIGATION_MODULES, ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
 
 const AccountSidebar = lazy(() => import('#/account/accountSidebar'))
 
@@ -93,6 +95,10 @@ class DrawerLink extends React.Component {
     autoBind(this)
   }
   onClick(evt) {
+    if (this.props.disabled) {
+      evt.preventDefault()
+      return
+    }
     if (!this.props.href) {
       evt.preventDefault()
     }
@@ -102,14 +108,40 @@ class DrawerLink extends React.Component {
   }
   render() {
     const icon = <i className={`k-icon-${this.props['k-icon']}`} />
+    const tooltip = this.props.tooltip || this.props.label
+    const ariaLabel = this.props['aria-label'] || this.props.label
     const classNames = [this.props.class, 'k-drawer__link']
 
+    if (this.props.disabled) {
+      classNames.push('k-drawer__link--disabled')
+    }
+
     let link
-    if (this.props.linkto) {
+    if (this.props.linkto && !this.props.disabled) {
       link = (
-        <NavLink to={this.props.linkto} className={classNames.join(' ')} data-tip={this.props.label}>
+        <NavLink
+          to={this.props.linkto}
+          className={classNames.join(' ')}
+          data-tip={tooltip}
+          aria-label={ariaLabel}
+          title={tooltip}
+        >
           {icon}
         </NavLink>
+      )
+    } else if (this.props.linkto) {
+      link = (
+        <span
+          className={classNames.join(' ')}
+          data-tip={tooltip}
+          aria-disabled='true'
+          aria-label={ariaLabel}
+          role='link'
+          tabIndex={-1}
+          title={tooltip}
+        >
+          {icon}
+        </span>
       )
     } else {
       link = (
@@ -117,7 +149,9 @@ class DrawerLink extends React.Component {
           href={this.props.href || '#'}
           className={classNames.join(' ')}
           onClick={this.onClick}
-          data-tip={this.props.label}
+          data-tip={tooltip}
+          aria-label={ariaLabel}
+          title={tooltip}
         >
           {icon}
         </a>
@@ -125,6 +159,69 @@ class DrawerLink extends React.Component {
     }
     return link
   }
+}
+
+export const ModulePanelSidebar = ({ module }) => {
+  const location = useLocation()
+  const heading = t(module.label)
+  const panels = module.panels ?? []
+
+  return (
+    <nav className='k-drawer__module-sidebar' aria-label={heading}>
+      <h2 className='k-drawer__module-title'>{heading}</h2>
+      <ul className='k-drawer__module-panel-list'>
+        {panels.map((panel) => {
+          const panelLabel = t(panel.label)
+
+          return (
+            <li key={panel.id}>
+              <NavLink
+                to={panel.route}
+                className={({ isActive }) =>
+                  [
+                    'k-drawer__module-panel-link',
+                    isActive || location.pathname === panel.route
+                      ? 'k-drawer__module-panel-link--active'
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')
+                }
+              >
+                {panelLabel}
+              </NavLink>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}
+
+export const PrimaryNavigation = ({ accountType }) => {
+  const isOrganizational = accountType === 'organizational' || accountType === 'organization'
+  const orgOnlyTooltip = t(ORGANIZATION_ONLY_TOOLTIP)
+
+  return (
+    <bem.KDrawer__primaryIcons>
+      {NAVIGATION_MODULES.map((module) => {
+        const label = t(module.label)
+        const disabled = module.requiresOrganizational && !isOrganizational
+        const tooltip = disabled ? orgOnlyTooltip : label
+
+        return (
+          <DrawerLink
+            key={module.id}
+            label={label}
+            linkto={module.route}
+            k-icon={module.icon}
+            disabled={disabled}
+            tooltip={tooltip}
+          />
+        )
+      })}
+    </bem.KDrawer__primaryIcons>
+  )
 }
 
 const Drawer = observer(
@@ -139,24 +236,42 @@ const Drawer = observer(
       return routerIsActive(ROUTES.ACCOUNT_ROOT)
     }
 
+    getActiveOrganizationalModule() {
+      const pathname = this.props.router?.location?.pathname || ''
+
+      return NAVIGATION_MODULES.find(
+        (module) =>
+          module.requiresOrganizational &&
+          module.panels?.length &&
+          pathname.startsWith(module.route),
+      )
+    }
+
     render() {
       // no sidebar for not logged in users
       if (!sessionStore.isLoggedIn) {
         return null
       }
 
+      const activeModule = this.props.isOrganizationAccount
+        ? this.getActiveOrganizationalModule()
+        : null
+
       return (
         <bem.KDrawer>
-          <bem.KDrawer__primaryIcons>
-            <DrawerLink label={t('Projects')} linkto={PROJECTS_ROUTES.MY_PROJECTS} k-icon='projects' />
-            <DrawerLink label={t('Library')} linkto={ROUTES.LIBRARY} k-icon='library' />
-          </bem.KDrawer__primaryIcons>
+          <PrimaryNavigation accountType={this.props.accountType} />
 
           <bem.KDrawer__sidebar>
-            {this.isLibrary() && (
+            {activeModule ? (
               <bem.FormSidebarWrapper>
-                <LibrarySidebar />
+                <ModulePanelSidebar module={activeModule} />
               </bem.FormSidebarWrapper>
+            ) : (
+              this.isLibrary() && (
+                <bem.FormSidebarWrapper>
+                  <LibrarySidebar />
+                </bem.FormSidebarWrapper>
+              )
             )}
 
             {this.isAccount() && (
@@ -167,7 +282,7 @@ const Drawer = observer(
               </Suspense>
             )}
 
-            {!this.isLibrary() && !this.isAccount() && (
+            {!activeModule && !this.isLibrary() && !this.isAccount() && (
               <bem.FormSidebarWrapper>
                 <FormSidebar />
               </bem.FormSidebarWrapper>
@@ -192,4 +307,16 @@ reactMixin(Drawer.prototype, searches.common)
 reactMixin(Drawer.prototype, mixins.droppable)
 reactMixin(Drawer.prototype, mixins.contextRouter)
 
-export default withRouter(Drawer)
+const DrawerWithSession = (props) => {
+  const { accountType, isOrganizationAccount } = useSession()
+
+  return (
+    <Drawer
+      {...props}
+      accountType={accountType}
+      isOrganizationAccount={isOrganizationAccount}
+    />
+  )
+}
+
+export default withRouter(DrawerWithSession)

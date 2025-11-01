@@ -24,6 +24,18 @@ class CurrentUserTestCase(BaseTestCase):
             is_active=True,
         )
 
+    def test_retrieve_includes_account_type(self):
+        self.user.extra_details.account_type = 'organizational'
+        self.user.extra_details.save(update_fields=['account_type'])
+
+        self.client.login(username='delete_me', password='delete_me')
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == status.HTTP_200_OK
+        payload = response.json()
+        assert payload['account_type'] == 'organization'
+
     @override_config(ALLOW_SELF_ACCOUNT_DELETION=True)
     def test_user_deactivation(self):
         # Check user account is as expected

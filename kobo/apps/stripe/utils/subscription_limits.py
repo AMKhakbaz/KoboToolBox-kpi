@@ -6,6 +6,11 @@ from django.conf import settings
 from django.db.models import F, Max, Q, QuerySet, Window
 from django.db.models.functions import Coalesce
 
+from hub.models import ExtraUserDetail
+from hub.models.extra_user_detail import (
+    AccountTypeChoices,
+    PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES,
+)
 from kobo.apps.organizations.constants import UsageType
 from kobo.apps.organizations.models import Organization, OrganizationUser
 from kobo.apps.organizations.types import UsageLimits
@@ -194,20 +199,61 @@ def get_organizations_effective_limits(
     :param include_onetime_addons: bool. Include onetime addons in the calculation
     """
 
-    if not settings.STRIPE_ENABLED:
-        orgs = organizations or Organization.objects.all()
-        return {org.id: _get_default_usage_limits() for org in orgs}
+    if organizations is not None:
+        orgs = list(organizations)
+    else:
+        orgs = list(Organization.objects.all())
 
-    effective_limits = get_organizations_subscription_limits(
-        include_storage_addons=include_storage_addons, organizations=organizations
-    )
-    if include_onetime_addons:
-        PlanAddOn = apps.get_model('stripe', 'PlanAddOn')  # noqa
-        addon_limits = PlanAddOn.get_organizations_totals(organizations=organizations)
-        for org_id, limits in effective_limits.items():
-            for usage_type, _ in UsageType.choices:
-                addon = addon_limits.get(org_id, {}).get(f'total_{usage_type}_limit', 0)
-                limits[f'{usage_type}_limit'] += addon
+    if not settings.STRIPE_ENABLED:
+        effective_limits = {org.id: _get_default_usage_limits() for org in orgs}
+    else:
+        effective_limits = get_organizations_subscription_limits(
+            include_storage_addons=include_storage_addons,
+            organizations=orgs,
+        )
+        if include_onetime_addons:
+            PlanAddOn = apps.get_model('stripe', 'PlanAddOn')  # noqa
+            addon_limits = PlanAddOn.get_organizations_totals(organizations=orgs)
+            for org_id, limits in effective_limits.items():
+                for usage_type, _ in UsageType.choices:
+                    addon = addon_limits.get(org_id, {}).get(
+                        f'total_{usage_type}_limit', 0
+                    )
+                    limits[f'{usage_type}_limit'] += addon
+
+    owner_ids_by_org: dict[str, int] = {}
+    for org in orgs:
+        owner = org.owner_user_object
+        if owner is not None:
+            owner_ids_by_org[org.id] = owner.id
+
+    if owner_ids_by_org:
+        extra_details_by_user = {
+            detail.user_id: detail
+            for detail in ExtraUserDetail.objects.filter(
+                user_id__in=owner_ids_by_org.values()
+            )
+        }
+        storage_limit_key = f'{UsageType.STORAGE_BYTES}_limit'
+        for org_id, owner_id in owner_ids_by_org.items():
+            limits = effective_limits.setdefault(org_id, _get_default_usage_limits())
+            extra_details = extra_details_by_user.get(owner_id)
+            if extra_details is None:
+                continue
+
+            quota = extra_details.storage_quota_bytes
+            if (
+                quota is None
+                and extra_details.account_type == AccountTypeChoices.PERSONAL
+            ):
+                quota = PERSONAL_ACCOUNT_STORAGE_LIMIT_BYTES
+
+            if quota is None:
+                continue
+
+            current_limit = limits.get(storage_limit_key, inf)
+            limits[storage_limit_key] = min(current_limit, int(quota))
+
     return effective_limits
 
 

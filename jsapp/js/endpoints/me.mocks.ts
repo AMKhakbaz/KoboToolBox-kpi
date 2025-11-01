@@ -5,10 +5,12 @@ import type { AccountResponse } from '#/dataInterface'
 /**
  * Mock API for session endpoint. Use it in Storybook tests in `parameters.msw.handlers[]`.
  */
-const meMock = http.get<never, never, AccountResponse>(endpoints.ME, () => HttpResponse.json(meMockResponse))
+const meMock = http.get<never, never, AccountResponse>(endpoints.ME, () =>
+  HttpResponse.json(personalAccountMockResponse),
+)
 export default meMock
 
-export const meMockResponse: AccountResponse = {
+export const personalAccountMockResponse: AccountResponse = {
   username: 'zefir',
   first_name: '',
   last_name: '',
@@ -38,4 +40,31 @@ export const meMockResponse: AccountResponse = {
     uid: 'orgWiPMsyx4oNEHXfqGhrbzt',
   },
   extra_details__uid: 'uTcCX9wL5royoPb4mHWcBz',
+  account_type: 'personal',
+  payment_status: 'not_required',
+  module_access: ['form_manager', 'library'],
+  storage_quota_bytes: 524288000,
+  payment_confirmed_at: null,
 }
+
+export const organizationalAccountMockResponse: AccountResponse = {
+  ...personalAccountMockResponse,
+  account_type: 'organizational',
+  payment_status: 'confirmed',
+  module_access: [
+    'form_manager',
+    'library',
+    'management_project_management',
+    'management_team_oversight',
+    'collection_data_planning',
+    'collection_field_operations',
+    'quality_control_data_review',
+    'quality_control_issue_tracking',
+    'mranalysis_insights',
+    'mranalysis_workbench',
+  ],
+  storage_quota_bytes: null,
+  payment_confirmed_at: '2025-09-21T10:10:10Z',
+}
+
+export const meMockResponse = personalAccountMockResponse

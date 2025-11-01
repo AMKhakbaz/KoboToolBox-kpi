@@ -16,13 +16,46 @@ shouldn't incur a penalty:
 
 def grant_default_model_level_perms(user):
     """
-    Gives `user` unrestricted model-level access to Assets.
+    Gives `user` model-level access according to their configured module access.
     Without this, actions on individual instances are immediately denied and
     object-level permissions are never considered.
     """
+    from hub.models.extra_user_detail import (
+        AccountTypeChoices,
+        MODULE_ALL,
+        MODULE_FORM_MANAGER,
+        MODULE_LIBRARY,
+        PaymentStatusChoices,
+    )
     from kpi.models import Asset
 
-    grant_all_model_level_perms(user, models_or_content_types=[Asset])
+    models_to_grant = []
+    try:
+        extra_details = user.extra_details
+    except Exception:  # pragma: no cover - defensive; relation should exist
+        extra_details = None
+
+    if extra_details:
+        module_access = extra_details.module_access or []
+        payment_status = getattr(extra_details, 'payment_status', None)
+        account_type = getattr(extra_details, 'account_type', None)
+
+        if (
+            account_type == AccountTypeChoices.ORGANIZATIONAL
+            and payment_status == PaymentStatusChoices.PENDING
+        ):
+            models_to_grant = []
+        elif not module_access or MODULE_ALL in module_access:
+            models_to_grant = [Asset]
+        elif MODULE_FORM_MANAGER in module_access or MODULE_LIBRARY in module_access:
+            models_to_grant = [Asset]
+    else:
+        models_to_grant = [Asset]
+
+    if not models_to_grant:
+        return
+
+    grant_all_model_level_perms(user, models_or_content_types=models_to_grant)
 
 
 def grant_all_model_level_perms(
@@ -79,4 +112,33 @@ def grant_all_model_level_perms(
 
 def is_user_anonymous(user):
     return user.is_anonymous or user.pk == settings.ANONYMOUS_USER_ID
+
+
+def user_can_access_module(user, module_name):
+    """Return whether ``user`` should be allowed to access ``module_name``."""
+
+    from hub.models.extra_user_detail import (
+        AccountTypeChoices,
+        MODULE_ALL,
+        MODULE_FORM_MANAGER,
+        MODULE_LIBRARY,
+    )
+
+    personal_defaults = {MODULE_FORM_MANAGER, MODULE_LIBRARY}
+
+    try:
+        extra_details = user.extra_details
+    except Exception:  # pragma: no cover - defensive, relation should exist
+        return True
+
+    module_access = extra_details.module_access or []
+    account_type = getattr(extra_details, 'account_type', None)
+
+    if account_type == AccountTypeChoices.PERSONAL and module_name not in personal_defaults:
+        return False
+
+    if module_access and MODULE_ALL not in module_access and module_name not in module_access:
+        return False
+
+    return True
 
