@@ -4,7 +4,7 @@ import { Button } from '@mantine/core'
 import { observer } from 'mobx-react'
 import autoBind from 'react-autobind'
 import reactMixin from 'react-mixin'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import Reflux from 'reflux'
 import bem from '#/bem'
 import LibrarySidebar from '#/components/library/librarySidebar'
@@ -161,6 +161,43 @@ class DrawerLink extends React.Component {
   }
 }
 
+export const ModulePanelSidebar = ({ module }) => {
+  const location = useLocation()
+  const heading = t(module.label)
+  const panels = module.panels ?? []
+
+  return (
+    <nav className='k-drawer__module-sidebar' aria-label={heading}>
+      <h2 className='k-drawer__module-title'>{heading}</h2>
+      <ul className='k-drawer__module-panel-list'>
+        {panels.map((panel) => {
+          const panelLabel = t(panel.label)
+
+          return (
+            <li key={panel.id}>
+              <NavLink
+                to={panel.route}
+                className={({ isActive }) =>
+                  [
+                    'k-drawer__module-panel-link',
+                    isActive || location.pathname === panel.route
+                      ? 'k-drawer__module-panel-link--active'
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')
+                }
+              >
+                {panelLabel}
+              </NavLink>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}
+
 export const PrimaryNavigation = ({ accountType }) => {
   const isOrganizational = accountType === 'organizational' || accountType === 'organization'
   const orgOnlyTooltip = t(ORGANIZATION_ONLY_TOOLTIP)
@@ -199,21 +236,42 @@ const Drawer = observer(
       return routerIsActive(ROUTES.ACCOUNT_ROOT)
     }
 
+    getActiveOrganizationalModule() {
+      const pathname = this.props.router?.location?.pathname || ''
+
+      return NAVIGATION_MODULES.find(
+        (module) =>
+          module.requiresOrganizational &&
+          module.panels?.length &&
+          pathname.startsWith(module.route),
+      )
+    }
+
     render() {
       // no sidebar for not logged in users
       if (!sessionStore.isLoggedIn) {
         return null
       }
 
+      const activeModule = this.props.isOrganizationAccount
+        ? this.getActiveOrganizationalModule()
+        : null
+
       return (
         <bem.KDrawer>
           <PrimaryNavigation accountType={this.props.accountType} />
 
           <bem.KDrawer__sidebar>
-            {this.isLibrary() && (
+            {activeModule ? (
               <bem.FormSidebarWrapper>
-                <LibrarySidebar />
+                <ModulePanelSidebar module={activeModule} />
               </bem.FormSidebarWrapper>
+            ) : (
+              this.isLibrary() && (
+                <bem.FormSidebarWrapper>
+                  <LibrarySidebar />
+                </bem.FormSidebarWrapper>
+              )
             )}
 
             {this.isAccount() && (
@@ -224,7 +282,7 @@ const Drawer = observer(
               </Suspense>
             )}
 
-            {!this.isLibrary() && !this.isAccount() && (
+            {!activeModule && !this.isLibrary() && !this.isAccount() && (
               <bem.FormSidebarWrapper>
                 <FormSidebar />
               </bem.FormSidebarWrapper>
@@ -250,9 +308,15 @@ reactMixin(Drawer.prototype, mixins.droppable)
 reactMixin(Drawer.prototype, mixins.contextRouter)
 
 const DrawerWithSession = (props) => {
-  const { accountType } = useSession()
+  const { accountType, isOrganizationAccount } = useSession()
 
-  return <Drawer {...props} accountType={accountType} />
+  return (
+    <Drawer
+      {...props}
+      accountType={accountType}
+      isOrganizationAccount={isOrganizationAccount}
+    />
+  )
 }
 
 export default withRouter(DrawerWithSession)

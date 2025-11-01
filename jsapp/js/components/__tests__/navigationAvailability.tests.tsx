@@ -4,7 +4,7 @@ import { expect as jestExpect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
-import { PrimaryNavigation } from '#/components/drawer'
+import { ModulePanelSidebar, PrimaryNavigation } from '#/components/drawer'
 import { NAVIGATION_MODULES, ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
 import RequireOrganizationalAccount from '#/router/RequireOrganizationalAccount'
 import { MANAGEMENT_ROUTES, PROJECTS_ROUTES } from '#/router/routerConstants'
@@ -115,6 +115,36 @@ describe('PrimaryNavigation rendering', () => {
       expect(link.getAttribute('title')).to.equal(translate(module.label))
       expect(link.tagName).to.equal('A')
     })
+  })
+})
+
+describe('ModulePanelSidebar', () => {
+  it('lists each panel with navigation links', () => {
+    const managementModule = NAVIGATION_MODULES.find((module) => module.id === 'management')!
+
+    render(
+      <MemoryRouter initialEntries={[MANAGEMENT_ROUTES.PROJECT_MANAGEMENT]}>
+        <ModulePanelSidebar module={managementModule} />
+      </MemoryRouter>,
+    )
+
+    managementModule.panels?.forEach((panel) => {
+      expect(screen.getByRole('link', { name: panel.label })).to.exist
+    })
+  })
+
+  it('highlights the active panel', () => {
+    const managementModule = NAVIGATION_MODULES.find((module) => module.id === 'management')!
+
+    render(
+      <MemoryRouter initialEntries={[MANAGEMENT_ROUTES.USER_MANAGEMENT]}>
+        <ModulePanelSidebar module={managementModule} />
+      </MemoryRouter>,
+    )
+
+    const activeLink = screen.getByRole('link', { name: 'User Management' })
+
+    expect(activeLink.classList.contains('k-drawer__module-panel-link--active')).to.equal(true)
   })
 })
 
