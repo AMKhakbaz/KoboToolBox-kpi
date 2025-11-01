@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('mranalysis.insights')
 
 const InsightsPage = () => (
-  <ModuleBlankState
-    heading={t('Insights')}
-    description={t('Transform mixed-method findings into shareable briefs and impact dashboards for leadership.')}
-    supportText={t('Insight curation for organizational accounts will launch after internal pilots conclude.')}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default InsightsPage

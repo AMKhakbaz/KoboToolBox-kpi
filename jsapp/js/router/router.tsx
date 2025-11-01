@@ -1,15 +1,17 @@
 import React, { Suspense } from 'react'
 
-import { Navigate, Route, createHashRouter, createRoutesFromElements } from 'react-router-dom'
+import { Navigate, Outlet, Route, createHashRouter, createRoutesFromElements } from 'react-router-dom'
 import accountRoutes from '#/account/routes'
 import App from '#/app'
 import { FormPage, LibraryAssetEditor } from '#/components/formEditors'
+import LoadingSpinner from '#/components/common/loadingSpinner'
 import AssetRoute from '#/components/library/assetRoute'
 import MyLibraryRoute from '#/components/library/myLibraryRoute'
 import PublicCollectionsRoute from '#/components/library/publicCollectionsRoute'
 import { PERMISSIONS_CODENAMES } from '#/components/permissions/permConstants'
 import processingRoutes from '#/components/processing/routes'
 import projectsRoutes from '#/projects/routes'
+import { NAVIGATION_MODULES } from '#/navigation/modules.config'
 import PermProtectedRoute from '#/router/permProtectedRoute'
 import { injectRouter } from './legacy'
 import RequireAuth from './requireAuth'
@@ -24,18 +26,27 @@ const FormXform = React.lazy(() => import(/* webpackPrefetch: true */ '#/compone
 const FormJson = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/formJson'))
 const SectionNotFound = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/sectionNotFound'))
 const FormNotFound = React.lazy(() => import(/* webpackPrefetch: true */ '#/components/formNotFound'))
-const ManagementModule = React.lazy(() => import('#/modules/management'))
-const ProjectManagementPage = React.lazy(() => import('#/modules/management/ProjectManagementPage'))
-const TeamOversightPage = React.lazy(() => import('#/modules/management/TeamOversightPage'))
-const CollectionModule = React.lazy(() => import('#/modules/collection'))
-const DataPlanningPage = React.lazy(() => import('#/modules/collection/DataPlanningPage'))
-const FieldOperationsPage = React.lazy(() => import('#/modules/collection/FieldOperationsPage'))
-const QualityControlModule = React.lazy(() => import('#/modules/quality-control'))
-const DataReviewPage = React.lazy(() => import('#/modules/quality-control/DataReviewPage'))
-const IssueTrackingPage = React.lazy(() => import('#/modules/quality-control/IssueTrackingPage'))
-const MRAnalysisModule = React.lazy(() => import('#/modules/mranalysis'))
-const WorkbenchPage = React.lazy(() => import('#/modules/mranalysis/WorkbenchPage'))
-const InsightsPage = React.lazy(() => import('#/modules/mranalysis/InsightsPage'))
+const PANEL_COMPONENTS = new Map(
+  NAVIGATION_MODULES.flatMap((module) =>
+    module.panels
+      ?.filter((panel) => typeof panel.component === 'function')
+      .map((panel) => [panel.id, React.lazy(panel.component!)] as const) ?? [],
+  ),
+)
+
+const ORGANIZATIONAL_MODULES = NAVIGATION_MODULES.filter(
+  (module) => module.requiresOrganizational && module.panels?.some((panel) => panel.component),
+)
+
+const getPanelPathSegment = (moduleRoute: string, panelRoute: string) => {
+  if (!panelRoute.startsWith(moduleRoute)) {
+    return panelRoute
+  }
+
+  const trimmed = panelRoute.slice(moduleRoute.length)
+
+  return trimmed.startsWith('/') ? trimmed.slice(1) : trimmed
+}
 
 export const router = createHashRouter(
   createRoutesFromElements(
@@ -115,62 +126,48 @@ export const router = createHashRouter(
           }
         />
       </Route>
-      <Route
-        path={ROUTES.MANAGEMENT}
-        element={
-          <RequireAuth>
-            <RequireOrganizationalAccount>
-              <ManagementModule />
-            </RequireOrganizationalAccount>
-          </RequireAuth>
+      {ORGANIZATIONAL_MODULES.map((module) => {
+        const panels = module.panels?.filter((panel) => panel.component) ?? []
+
+        if (!panels.length) {
+          return null
         }
-      >
-        <Route index element={<Navigate to='project-management' replace />} />
-        <Route path='project-management' element={<ProjectManagementPage />} />
-        <Route path='team-oversight' element={<TeamOversightPage />} />
-      </Route>
-      <Route
-        path={ROUTES.COLLECTION}
-        element={
-          <RequireAuth>
-            <RequireOrganizationalAccount>
-              <CollectionModule />
-            </RequireOrganizationalAccount>
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Navigate to='data-planning' replace />} />
-        <Route path='data-planning' element={<DataPlanningPage />} />
-        <Route path='field-operations' element={<FieldOperationsPage />} />
-      </Route>
-      <Route
-        path={ROUTES.QUALITY_CONTROL}
-        element={
-          <RequireAuth>
-            <RequireOrganizationalAccount>
-              <QualityControlModule />
-            </RequireOrganizationalAccount>
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Navigate to='data-review' replace />} />
-        <Route path='data-review' element={<DataReviewPage />} />
-        <Route path='issue-tracking' element={<IssueTrackingPage />} />
-      </Route>
-      <Route
-        path={ROUTES.MR_ANALYSIS}
-        element={
-          <RequireAuth>
-            <RequireOrganizationalAccount>
-              <MRAnalysisModule />
-            </RequireOrganizationalAccount>
-          </RequireAuth>
-        }
-      >
-        <Route index element={<Navigate to='workbench' replace />} />
-        <Route path='workbench' element={<WorkbenchPage />} />
-        <Route path='insights' element={<InsightsPage />} />
-      </Route>
+
+        const defaultPanel = panels[0]
+
+        return (
+          <Route
+            key={module.id}
+            path={module.route}
+            element={
+              <RequireAuth>
+                <RequireOrganizationalAccount moduleLabel={module.label}>
+                  <Suspense fallback={<LoadingSpinner />}>
+                    <Outlet />
+                  </Suspense>
+                </RequireOrganizationalAccount>
+              </RequireAuth>
+            }
+          >
+            <Route index element={<Navigate to={defaultPanel.route} replace />} />
+            {panels.map((panel) => {
+              const PanelComponent = PANEL_COMPONENTS.get(panel.id)
+
+              if (!PanelComponent) {
+                return null
+              }
+
+              return (
+                <Route
+                  key={panel.id}
+                  path={getPanelPathSegment(module.route, panel.route)}
+                  element={<PanelComponent />}
+                />
+              )
+            })}
+          </Route>
+        )
+      })}
       <Route path={ROUTES.FORMS}>
         <Route
           index

@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('mranalysis.workbench')
 
 const WorkbenchPage = () => (
-  <ModuleBlankState
-    heading={t('Analysis Workbench')}
-    description={t('Combine datasets, annotate findings, and collaborate on advanced analyses in one place.')}
-    supportText={t('We are prototyping workflows for organizational analysts—stay tuned for beta access.')}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default WorkbenchPage

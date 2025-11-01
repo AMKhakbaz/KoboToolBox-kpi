@@ -1,25 +1,55 @@
 import type React from 'react'
+import { useEffect, useRef } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 
 import LoadingSpinner from '#/components/common/loadingSpinner'
-import AccessDenied from '#/router/accessDenied'
+import { ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
+import { notify } from '#/utils'
+import { PROJECTS_ROUTES } from './routerConstants'
 import { useSession } from '#/stores/useSession'
 
 interface Props {
-  children: React.ReactNode
+  readonly children: React.ReactNode
+  readonly moduleLabel?: string
 }
 
-const RequireOrganizationalAccount = ({ children }: Props) => {
+const RequireOrganizationalAccount = ({ children, moduleLabel }: Props) => {
   const session = useSession()
+  const location = useLocation()
+  const hasWarnedRef = useRef(false)
 
-  if (session.isPending) {
+  useEffect(() => {
+    if (
+      session.isPending ||
+      session.currentLoggedAccount?.account_type === 'organizational' ||
+      hasWarnedRef.current
+    ) {
+      return
+    }
+
+    hasWarnedRef.current = true
+
+    const tooltip = t(ORGANIZATION_ONLY_TOOLTIP)
+    const message = moduleLabel ? `${t(moduleLabel)}: ${tooltip}` : tooltip
+
+    notify.warning(message)
+  }, [moduleLabel, session.currentLoggedAccount, session.isPending])
+
+  if (session.isPending || !session.currentLoggedAccount) {
     return <LoadingSpinner />
   }
 
-  if (session.currentLoggedAccount?.account_type === 'organizational') {
+  if (session.currentLoggedAccount.account_type === 'organizational') {
     return <>{children}</>
   }
 
-  return <AccessDenied errorMessage='403: organizational account required' />
+  return (
+    <Navigate
+      replace
+      to={PROJECTS_ROUTES.MY_PROJECTS}
+      state={{ from: `${location.pathname}${location.search}${location.hash}` }}
+    />
+  )
 }
 
 export default RequireOrganizationalAccount

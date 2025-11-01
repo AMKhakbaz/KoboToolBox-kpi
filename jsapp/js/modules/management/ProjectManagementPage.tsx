@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('management.project-management')
 
 const ProjectManagementPage = () => (
-  <ModuleBlankState
-    heading={t('Project Management')}
-    description={t('Organizational accounts will soon be able to plan milestones, assign leads, and monitor delivery from this workspace.')}
-    supportText={t("We're gathering feedback to shape the first release. Check back after the organizational rollout begins.")}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default ProjectManagementPage

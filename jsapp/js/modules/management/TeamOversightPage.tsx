@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('management.team-oversight')
 
 const TeamOversightPage = () => (
-  <ModuleBlankState
-    heading={t('Team Oversight')}
-    description={t('Centralize staffing visibility, manage assignments, and monitor workload balance for organizational teams.')}
-    supportText={t('Coming soon: streamlined admin controls for assigning reviewers, enumerators, and collaborators.')}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default TeamOversightPage

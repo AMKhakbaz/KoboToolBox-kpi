@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('collection.field-operations')
 
 const FieldOperationsPage = () => (
-  <ModuleBlankState
-    heading={t('Field Operations')}
-    description={t('Monitor enumerator status, supervise assignments, and react quickly to field challenges.')}
-    supportText={t('Real-time dashboards and alerts for organizational accounts are under construction.')}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default FieldOperationsPage

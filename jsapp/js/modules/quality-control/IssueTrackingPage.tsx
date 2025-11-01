@@ -1,13 +1,14 @@
 import React from 'react'
 
-import ModuleBlankState from '#/modules/common/ModuleBlankState'
+import { getPanelConfigById } from '#/navigation/modules.config'
+
+const panel = getPanelConfigById('quality-control.issue-tracking')
 
 const IssueTrackingPage = () => (
-  <ModuleBlankState
-    heading={t('Issue Tracking')}
-    description={t('Log quality issues, coordinate fixes, and keep audit-ready records across teams.')}
-    supportText={t('Stay tuned for collaborative queues and automated notifications for organizational accounts.')}
-  />
+  <section data-test-id={panel.testId}>
+    <h1>{t(panel.label)}</h1>
+    <p>{t('This page is under construction.')}</p>
+  </section>
 )
 
 export default IssueTrackingPage

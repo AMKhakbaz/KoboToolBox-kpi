@@ -1,17 +1,22 @@
 import React from 'react'
 
+import { expect as jestExpect } from '@jest/globals'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 import { PrimaryNavigation } from '#/components/drawer'
 import { NAVIGATION_MODULES, ORGANIZATION_ONLY_TOOLTIP } from '#/navigation/modules.config'
 import RequireOrganizationalAccount from '#/router/RequireOrganizationalAccount'
+import { MANAGEMENT_ROUTES, PROJECTS_ROUTES } from '#/router/routerConstants'
+import ProjectManagementPage from '#/modules/management/ProjectManagementPage'
 import { useSession } from '#/stores/useSession'
+import * as utils from '#/utils'
 import '#/bemComponents'
 
 jest.mock('#/stores/useSession')
 
 const mockedUseSession = useSession as jest.MockedFunction<typeof useSession>
+let warningSpy: jest.SpyInstance
 
 describe('primary navigation configuration', () => {
   it('marks advanced modules as organizational only', () => {
@@ -75,23 +80,42 @@ describe('PrimaryNavigation rendering', () => {
 })
 
 describe('RequireOrganizationalAccount', () => {
-  afterEach(() => {
-    mockedUseSession.mockReset()
+  beforeEach(() => {
+    warningSpy = jest.spyOn(utils.notify, 'warning' as any).mockImplementation(jest.fn())
   })
 
-  it('renders a denial message for personal accounts', () => {
+  afterEach(() => {
+    mockedUseSession.mockReset()
+    warningSpy.mockRestore()
+  })
+
+  it('redirects personal accounts and raises a notice', () => {
     mockedUseSession.mockReturnValue({
       currentLoggedAccount: { account_type: 'personal' } as any,
       isPending: false,
     })
 
     render(
-      <RequireOrganizationalAccount>
-        <div>Restricted content</div>
-      </RequireOrganizationalAccount>,
+      <MemoryRouter initialEntries={[MANAGEMENT_ROUTES.PROJECT_MANAGEMENT]}>
+        <Routes>
+          <Route path={PROJECTS_ROUTES.MY_PROJECTS} element={<div>Projects Home</div>} />
+          <Route
+            path={MANAGEMENT_ROUTES.PROJECT_MANAGEMENT}
+            element={
+              <RequireOrganizationalAccount moduleLabel='Management'>
+                <ProjectManagementPage />
+              </RequireOrganizationalAccount>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
     )
 
-    expect(screen.getByText(/Access Denied/i)).to.exist
+    expect(screen.getByText('Projects Home')).to.exist
+    expect(screen.queryByRole('heading', { name: 'Project Management' })).to.not.exist
+    jestExpect(warningSpy).toHaveBeenCalledWith(
+      jestExpect.stringContaining('Organization accounts'),
+    )
   })
 
   it('allows children for organizational accounts', () => {
@@ -101,11 +125,23 @@ describe('RequireOrganizationalAccount', () => {
     })
 
     render(
-      <RequireOrganizationalAccount>
-        <div>Restricted content</div>
-      </RequireOrganizationalAccount>,
+      <MemoryRouter initialEntries={[MANAGEMENT_ROUTES.PROJECT_MANAGEMENT]}>
+        <Routes>
+          <Route path={PROJECTS_ROUTES.MY_PROJECTS} element={<div>Projects Home</div>} />
+          <Route
+            path={MANAGEMENT_ROUTES.PROJECT_MANAGEMENT}
+            element={
+              <RequireOrganizationalAccount moduleLabel='Management'>
+                <ProjectManagementPage />
+              </RequireOrganizationalAccount>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
     )
 
-    expect(screen.getByText('Restricted content')).to.exist
+    expect(screen.getByRole('heading', { name: 'Project Management' })).to.exist
+    expect(screen.getByText('This page is under construction.')).to.exist
+    jestExpect(warningSpy).not.toHaveBeenCalled()
   })
 })

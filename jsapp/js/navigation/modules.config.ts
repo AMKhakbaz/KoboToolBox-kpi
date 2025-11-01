@@ -1,3 +1,5 @@
+import type { ComponentType } from 'react'
+
 import {
   COLLECTION_ROUTES,
   MANAGEMENT_ROUTES,
@@ -11,6 +13,8 @@ export interface NavigationPanelConfig {
   readonly id: string
   readonly label: string
   readonly route: string
+  readonly testId?: string
+  readonly component?: () => Promise<{ default: ComponentType }>
 }
 
 export interface NavigationModuleConfig {
@@ -50,11 +54,15 @@ export const NAVIGATION_MODULES: readonly NavigationModuleConfig[] = [
         id: 'management.project-management',
         label: 'Project Management',
         route: MANAGEMENT_ROUTES.PROJECT_MANAGEMENT,
+        testId: 'management-project-management-placeholder',
+        component: () => import('#/modules/management/ProjectManagementPage'),
       },
       {
         id: 'management.team-oversight',
         label: 'Team Oversight',
         route: MANAGEMENT_ROUTES.TEAM_OVERSIGHT,
+        testId: 'management-team-oversight-placeholder',
+        component: () => import('#/modules/management/TeamOversightPage'),
       },
     ],
   },
@@ -69,11 +77,15 @@ export const NAVIGATION_MODULES: readonly NavigationModuleConfig[] = [
         id: 'collection.data-planning',
         label: 'Data Planning',
         route: COLLECTION_ROUTES.DATA_PLANNING,
+        testId: 'collection-data-planning-placeholder',
+        component: () => import('#/modules/collection/DataPlanningPage'),
       },
       {
         id: 'collection.field-operations',
         label: 'Field Operations',
         route: COLLECTION_ROUTES.FIELD_OPERATIONS,
+        testId: 'collection-field-operations-placeholder',
+        component: () => import('#/modules/collection/FieldOperationsPage'),
       },
     ],
   },
@@ -88,11 +100,15 @@ export const NAVIGATION_MODULES: readonly NavigationModuleConfig[] = [
         id: 'quality-control.data-review',
         label: 'Data Review',
         route: QUALITY_CONTROL_ROUTES.DATA_REVIEW,
+        testId: 'quality-control-data-review-placeholder',
+        component: () => import('#/modules/quality-control/DataReviewPage'),
       },
       {
         id: 'quality-control.issue-tracking',
         label: 'Issue Tracking',
         route: QUALITY_CONTROL_ROUTES.ISSUE_TRACKING,
+        testId: 'quality-control-issue-tracking-placeholder',
+        component: () => import('#/modules/quality-control/IssueTrackingPage'),
       },
     ],
   },
@@ -107,11 +123,15 @@ export const NAVIGATION_MODULES: readonly NavigationModuleConfig[] = [
         id: 'mranalysis.workbench',
         label: 'Workbench',
         route: MR_ANALYSIS_ROUTES.WORKBENCH,
+        testId: 'mranalysis-workbench-placeholder',
+        component: () => import('#/modules/mranalysis/WorkbenchPage'),
       },
       {
         id: 'mranalysis.insights',
         label: 'Insights',
         route: MR_ANALYSIS_ROUTES.INSIGHTS,
+        testId: 'mranalysis-insights-placeholder',
+        component: () => import('#/modules/mranalysis/InsightsPage'),
       },
     ],
   },
@@ -130,3 +150,14 @@ export const NAVIGATION_MODULES: readonly NavigationModuleConfig[] = [
     ],
   },
 ] as const
+
+export const getPanelConfigById = (panelId: string): NavigationPanelConfig => {
+  for (const module of NAVIGATION_MODULES) {
+    const panel = module.panels?.find((candidate) => candidate.id === panelId)
+    if (panel) {
+      return panel
+    }
+  }
+
+  throw new Error(`Unknown navigation panel id: ${panelId}`)
+}
