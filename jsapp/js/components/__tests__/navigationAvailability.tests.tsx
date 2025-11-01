@@ -30,6 +30,45 @@ describe('primary navigation configuration', () => {
       'Quality Control',
       'MRAnalysis',
     ])
+
+    const modulePanels = Object.fromEntries(
+      NAVIGATION_MODULES.filter((module) => module.requiresOrganizational).map((module) => [
+        module.label,
+        module.panels?.map((panel) => panel.label) ?? [],
+      ]),
+    )
+
+    expect(modulePanels['Management']).to.deep.equal([
+      'Project Management',
+      'User Management',
+      'Database Management',
+      'Quota Management',
+    ])
+
+    expect(modulePanels['Collection']).to.deep.equal([
+      'Collection Management',
+      'Collection Performance',
+      'Telephone Interviewer',
+      'Fieldwork Interviewer',
+      'Focus Group Panel',
+    ])
+
+    expect(modulePanels['Quality Control']).to.deep.equal([
+      'QC Management',
+      'QC Performance',
+      'Voice Review',
+      'Callback QC',
+      'Coding',
+      'Statistical Health Check',
+    ])
+
+    expect(modulePanels['MRAnalysis']).to.deep.equal([
+      'Tabulation',
+      'Statistics',
+      'Funnel Analysis',
+      'Conjoint Analysis',
+      'Segmentation Analysis',
+    ])
   })
 
   it('keeps core modules available to all accounts', () => {
@@ -65,7 +104,7 @@ describe('PrimaryNavigation rendering', () => {
   it('keeps modules navigable for organizational accounts', () => {
     render(
       <MemoryRouter>
-        <PrimaryNavigation accountType='organizational' />
+        <PrimaryNavigation accountType='organization' />
       </MemoryRouter>,
     )
 
@@ -126,9 +165,9 @@ describe('RequireOrganizationalAccount', () => {
 
   it('allows children for organizational accounts', () => {
     mockedUseSession.mockReturnValue({
-      currentLoggedAccount: { account_type: 'organizational' } as any,
+      currentLoggedAccount: { account_type: 'organization' } as any,
       isPending: false,
-      accountType: 'organizational',
+      accountType: 'organization',
       isOrganizationAccount: true,
       isPersonalAccount: false,
       logOut: jest.fn(),

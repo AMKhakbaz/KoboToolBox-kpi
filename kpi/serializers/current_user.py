@@ -173,9 +173,14 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_account_type(self, obj):
         try:
-            return obj.extra_details.account_type
+            account_type = obj.extra_details.account_type
         except Exception:  # pragma: no cover - defensive
             return None
+
+        if account_type == ExtraUserDetail.AccountTypeChoices.ORGANIZATIONAL:
+            return 'organization'
+
+        return account_type
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_payment_status(self, obj):

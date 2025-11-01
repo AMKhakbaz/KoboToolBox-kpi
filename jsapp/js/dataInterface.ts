@@ -875,7 +875,7 @@ export interface AccountResponse {
     uid: string
   }
   extra_details__uid: string
-  account_type: 'organizational' | 'personal'
+  account_type: 'organizational' | 'organization' | 'personal'
   payment_status: 'pending' | 'confirmed' | 'not_required'
   module_access: string[]
   storage_quota_bytes: number | null

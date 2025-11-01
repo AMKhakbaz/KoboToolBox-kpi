@@ -26,7 +26,7 @@ class SessionStore {
   }
 
   get isOrganizationAccount(): boolean {
-    return this.accountType === 'organizational'
+    return this.accountType === 'organizational' || this.accountType === 'organization'
   }
 
   get isPersonalAccount(): boolean {

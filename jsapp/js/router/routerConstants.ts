@@ -64,25 +64,37 @@ export const PROJECTS_ROUTES: { readonly [key: string]: string } = {
 export const MANAGEMENT_ROUTES = Object.freeze({
   ROOT: ROUTES.MANAGEMENT,
   PROJECT_MANAGEMENT: ROUTES.MANAGEMENT + '/project-management',
-  TEAM_OVERSIGHT: ROUTES.MANAGEMENT + '/team-oversight',
+  USER_MANAGEMENT: ROUTES.MANAGEMENT + '/user-management',
+  DATABASE_MANAGEMENT: ROUTES.MANAGEMENT + '/database-management',
+  QUOTA_MANAGEMENT: ROUTES.MANAGEMENT + '/quota-management',
 })
 
 export const COLLECTION_ROUTES = Object.freeze({
   ROOT: ROUTES.COLLECTION,
-  DATA_PLANNING: ROUTES.COLLECTION + '/data-planning',
-  FIELD_OPERATIONS: ROUTES.COLLECTION + '/field-operations',
+  COLLECTION_MANAGEMENT: ROUTES.COLLECTION + '/collection-management',
+  COLLECTION_PERFORMANCE: ROUTES.COLLECTION + '/collection-performance',
+  TELEPHONE_INTERVIEWER: ROUTES.COLLECTION + '/telephone-interviewer',
+  FIELDWORK_INTERVIEWER: ROUTES.COLLECTION + '/fieldwork-interviewer',
+  FOCUS_GROUP_PANEL: ROUTES.COLLECTION + '/focus-group-panel',
 })
 
 export const QUALITY_CONTROL_ROUTES = Object.freeze({
   ROOT: ROUTES.QUALITY_CONTROL,
-  DATA_REVIEW: ROUTES.QUALITY_CONTROL + '/data-review',
-  ISSUE_TRACKING: ROUTES.QUALITY_CONTROL + '/issue-tracking',
+  QC_MANAGEMENT: ROUTES.QUALITY_CONTROL + '/qc-management',
+  QC_PERFORMANCE: ROUTES.QUALITY_CONTROL + '/qc-performance',
+  VOICE_REVIEW: ROUTES.QUALITY_CONTROL + '/voice-review',
+  CALLBACK_QC: ROUTES.QUALITY_CONTROL + '/callback-qc',
+  CODING: ROUTES.QUALITY_CONTROL + '/coding',
+  STATISTICAL_HEALTH_CHECK: ROUTES.QUALITY_CONTROL + '/statistical-health-check',
 })
 
 export const MR_ANALYSIS_ROUTES = Object.freeze({
   ROOT: ROUTES.MR_ANALYSIS,
-  WORKBENCH: ROUTES.MR_ANALYSIS + '/workbench',
-  INSIGHTS: ROUTES.MR_ANALYSIS + '/insights',
+  TABULATION: ROUTES.MR_ANALYSIS + '/tabulation',
+  STATISTICS: ROUTES.MR_ANALYSIS + '/statistics',
+  FUNNEL_ANALYSIS: ROUTES.MR_ANALYSIS + '/funnel-analysis',
+  CONJOINT_ANALYSIS: ROUTES.MR_ANALYSIS + '/conjoint-analysis',
+  SEGMENTATION_ANALYSIS: ROUTES.MR_ANALYSIS + '/segmentation-analysis',
 })
 
 export const PROCESSING_ROUTE_GENERIC = ROUTES.FORM_PROCESSING_ROOT + '/:tabName'

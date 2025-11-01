@@ -34,7 +34,7 @@ class CurrentUserTestCase(BaseTestCase):
 
         assert response.status_code == status.HTTP_200_OK
         payload = response.json()
-        assert payload['account_type'] == 'organizational'
+        assert payload['account_type'] == 'organization'
 
     @override_config(ALLOW_SELF_ACCOUNT_DELETION=True)
     def test_user_deactivation(self):

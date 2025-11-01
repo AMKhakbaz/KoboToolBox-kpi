@@ -162,7 +162,7 @@ class DrawerLink extends React.Component {
 }
 
 export const PrimaryNavigation = ({ accountType }) => {
-  const isOrganizational = accountType === 'organizational'
+  const isOrganizational = accountType === 'organizational' || accountType === 'organization'
   const orgOnlyTooltip = t(ORGANIZATION_ONLY_TOOLTIP)
 
   return (
